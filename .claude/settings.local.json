@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev)",
+      "Bash(curl:*)",
+      "Bash(bash test_api.sh:*)",
+      "Bash(bash:*)",
+      "Bash(npm create vue@latest:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm create vite@latest:*)",
+      "Bash(npx create-vite@latest:*)",
+      "Bash(npx create-react-app:*)",
+      "Bash(npx --yes create-vite@latest:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(tasklist:*)",
+      "Bash(lsof:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
