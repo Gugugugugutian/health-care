@@ -124,7 +124,20 @@ const healthMetricController = {
                 return res.status(400).json({ error: 'Invalid month' });
             }
 
-            const summary = await HealthMetric.getMonthlySummary(user_id, yearNum, monthNum);
+            const summaryRows = await HealthMetric.getMonthlySummary(user_id, yearNum, monthNum);
+
+            // Convert array to object with metric_type as key
+            const summary = {};
+            summaryRows.forEach(row => {
+                summary[row.metric_type] = {
+                    count: row.count,
+                    avg_value: row.avg_value,
+                    min_value: row.min_value,
+                    max_value: row.max_value,
+                    first_date: row.first_date,
+                    last_date: row.last_date
+                };
+            });
 
             res.json({
                 year: yearNum,

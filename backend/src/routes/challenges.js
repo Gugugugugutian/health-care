@@ -6,6 +6,7 @@ const { auth } = require('../middleware/auth');
 // Public routes
 router.get('/active', challengeController.getActiveChallenges);
 router.get('/search', challengeController.searchChallenges);
+router.get('/popular', challengeController.getMostPopularChallenges);
 
 // Protected routes
 router.post('/', auth, challengeController.createChallenge);

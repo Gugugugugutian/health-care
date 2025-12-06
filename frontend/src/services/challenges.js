@@ -31,6 +31,12 @@ export const challengeService = {
     return response.data.stats || {};
   },
 
+  // Get most popular challenges
+  getMostPopular: async (limit = 5) => {
+    const response = await api.get('/challenges/popular', { params: { limit } });
+    return response.data.challenges || [];
+  },
+
   // Get challenge by ID
   getById: async (id) => {
     const response = await api.get(`/challenges/${id}`);

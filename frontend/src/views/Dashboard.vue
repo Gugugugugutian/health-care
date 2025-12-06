@@ -76,6 +76,20 @@
         </div>
       </div>
     </div>
+
+    <div class="analytics-grid">
+      <div class="analytics-section">
+        <HealthMetricMonthlyStats />
+      </div>
+
+      <div class="analytics-section">
+        <MostPopularChallenges />
+      </div>
+
+      <div class="analytics-section">
+        <MostActiveUsers />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -86,6 +100,9 @@ import { appointmentService } from '../services/appointments';
 import { challengeService } from '../services/challenges';
 import { healthMetricService } from '../services/healthMetrics';
 import { familyService } from '../services/family';
+import HealthMetricMonthlyStats from '../components/HealthMetricMonthlyStats.vue';
+import MostPopularChallenges from '../components/MostPopularChallenges.vue';
+import MostActiveUsers from '../components/MostActiveUsers.vue';
 
 const user = ref(authService.getCurrentUser());
 
@@ -302,6 +319,20 @@ h1 {
   margin: 0;
   color: #666;
   font-size: 0.85rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.analytics-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 </style>
 

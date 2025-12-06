@@ -187,6 +187,59 @@ class WellnessChallenge {
         return rows[0];
     }
 
+    // Get most popular challenges (with most participants)
+    static async getMostPopularChallenges(limit = 5) {
+        try {
+            console.log('Getting most popular challenges with limit:', limit);
+
+            // First, get all challenges
+            const [rows] = await pool.execute(
+                `SELECT
+                    wc.challenge_id,
+                    wc.challenge_uid,
+                    wc.title,
+                    wc.description,
+                    wc.goal,
+                    wc.start_date,
+                    wc.end_date,
+                    wc.created_by
+                 FROM wellness_challenges wc
+                 ORDER BY wc.start_date DESC`
+            );
+
+            console.log('Found', rows.length, 'challenges');
+
+            const popularChallenges = [];
+
+            // Add participant count and average progress for each challenge
+            for (const challenge of rows) {
+                const [participantRows] = await pool.execute(
+                    'SELECT COUNT(*) as count, AVG(COALESCE(progress, 0)) as avg_progress FROM challenge_participants WHERE challenge_id = ?',
+                    [challenge.challenge_id]
+                );
+
+                const participantCount = participantRows[0]?.count || 0;
+                const avgProgress = participantRows[0]?.avg_progress || 0;
+
+                // Only include challenges with participants
+                if (participantCount > 0) {
+                    challenge.participant_count = participantCount;
+                    challenge.avg_progress = avgProgress;
+                    popularChallenges.push(challenge);
+                }
+            }
+
+            // Sort by participant count
+            popularChallenges.sort((a, b) => b.participant_count - a.participant_count);
+
+            // Return only the requested limit
+            return popularChallenges.slice(0, limit);
+        } catch (error) {
+            console.error('Error in getMostPopularChallenges:', error);
+            throw error;
+        }
+    }
+
     // Delete challenge (only creator can delete)
     static async delete(challengeId, userId) {
         const connection = await pool.getConnection();

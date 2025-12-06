@@ -12,6 +12,7 @@ const challengeRoutes = require('./routes/challenges');
 const familyRoutes = require('./routes/family');
 const invitationRoutes = require('./routes/invitations');
 const healthMetricRoutes = require('./routes/healthMetrics');
+const userStatsRoutes = require('./routes/userStats');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/family', familyRoutes);
 app.use('/api/invitations', invitationRoutes);
 app.use('/api/health-metrics', healthMetricRoutes);
+app.use('/api/user-stats', userStatsRoutes);
 
 // 404 handler
 app.use((req, res) => {

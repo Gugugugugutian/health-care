@@ -24,7 +24,7 @@ export const healthMetricService = {
     const response = await api.get('/health-metrics/summary/monthly', {
       params: { year, month },
     });
-    return response.data.summary || {};
+    return response.data.summary || response.data || {};
   },
 
   // Get latest metrics

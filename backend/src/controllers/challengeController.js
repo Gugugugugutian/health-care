@@ -278,6 +278,29 @@ const challengeController = {
         }
     },
 
+    // Get most popular challenges
+    getMostPopularChallenges: async (req, res) => {
+        try {
+            const { limit } = req.query;
+            const limitNum = limit ? parseInt(limit) : 5;
+
+            if (isNaN(limitNum) || limitNum < 1 || limitNum > 20) {
+                return res.status(400).json({ error: 'Limit must be between 1 and 20' });
+            }
+
+            const challenges = await WellnessChallenge.getMostPopularChallenges(limitNum);
+
+            res.json({
+                count: challenges.length,
+                limit: limitNum,
+                challenges
+            });
+        } catch (error) {
+            console.error('Get most popular challenges error:', error);
+            res.status(500).json({ error: 'Failed to get most popular challenges', details: error.message });
+        }
+    },
+
     // Delete challenge
     deleteChallenge: async (req, res) => {
         try {

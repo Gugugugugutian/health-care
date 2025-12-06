@@ -20,7 +20,8 @@
       "Bash(node:*)",
       "Bash(powershell -Command:*)",
       "Bash(tasklist:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -209,6 +209,64 @@ class User {
         );
         return rows;
     }
+
+    // Get most active users (based on health metrics and challenge participation)
+    static async getMostActiveUsers(limit = 5) {
+        try {
+            console.log('Getting most active users with limit:', limit);
+
+            // First, get all users
+            const [rows] = await pool.execute(
+                `SELECT
+                    u.user_id,
+                    u.health_id,
+                    u.name,
+                    u.phone
+                 FROM users u
+                 ORDER BY u.created_at DESC`
+            );
+
+            console.log('Found', rows.length, 'users');
+
+            const activeUsers = [];
+
+            // Add activity counts for each user
+            for (const user of rows) {
+                // Get health metrics count
+                const [healthRows] = await pool.execute(
+                    'SELECT COUNT(*) as count FROM health_metrics WHERE user_id = ?',
+                    [user.user_id]
+                );
+
+                // Get challenge participation count
+                const [challengeRows] = await pool.execute(
+                    'SELECT COUNT(*) as count FROM challenge_participants WHERE user_id = ?',
+                    [user.user_id]
+                );
+
+                const healthMetricCount = healthRows[0]?.count || 0;
+                const challengeCount = challengeRows[0]?.count || 0;
+                const activityScore = healthMetricCount + (challengeCount * 2);
+
+                // Only include users with some activity
+                if (activityScore > 0) {
+                    user.health_metric_count = healthMetricCount;
+                    user.challenge_count = challengeCount;
+                    user.activity_score = activityScore;
+                    activeUsers.push(user);
+                }
+            }
+
+            // Sort by activity score
+            activeUsers.sort((a, b) => b.activity_score - a.activity_score);
+
+            // Return only the requested limit
+            return activeUsers.slice(0, limit);
+        } catch (error) {
+            console.error('Error in getMostActiveUsers:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = User;
