@@ -43,9 +43,15 @@ export const familyService = {
     return response.data;
   },
 
-  // Invite to family group
+  // Invite to family group by email/phone (deprecated)
   invite: async (familyId, inviteData) => {
     const response = await api.post(`/family/${familyId}/invite`, inviteData);
+    return response.data;
+  },
+
+  // Invite user to family group by health ID
+  inviteUser: async (familyId, inviteData) => {
+    const response = await api.post(`/family/${familyId}/invite-user`, inviteData);
     return response.data;
   },
 

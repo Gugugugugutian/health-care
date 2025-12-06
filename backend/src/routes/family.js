@@ -12,6 +12,7 @@ router.post('/:id/members', auth, familyController.addMember);
 router.delete('/:id/members/:user_id', auth, familyController.removeMember);
 router.put('/:id/members/:user_id', auth, familyController.updateMember);
 router.post('/:id/invite', auth, familyController.inviteToFamily);
+router.post('/:id/invite-user', auth, familyController.inviteUserToFamily);
 router.delete('/:id', auth, familyController.deleteFamilyGroup);
 
 module.exports = router;

@@ -202,7 +202,7 @@ const familyController = {
         }
     },
 
-    // Invite to family group
+    // Invite to family group by email/phone (deprecated, kept for backward compatibility)
     inviteToFamily: async (req, res) => {
         try {
             const { id } = req.params;
@@ -242,6 +242,65 @@ const familyController = {
             });
         } catch (error) {
             console.error('Invite to family error:', error);
+            res.status(500).json({ error: 'Failed to send invitation', details: error.message });
+        }
+    },
+
+    // Invite user to family group by health ID
+    inviteUserToFamily: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { health_id } = req.body;
+            const sent_by = req.user.user_id;
+
+            // Check if current user can manage the family group
+            const canManage = await FamilyGroup.canManage(id, sent_by);
+            if (!canManage) {
+                return res.status(403).json({ error: 'You do not have permission to send invitations' });
+            }
+
+            if (!health_id) {
+                return res.status(400).json({ error: 'Health ID is required' });
+            }
+
+            // Find user by health ID
+            const user = await FamilyGroup.findUserByHealthId(health_id);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found with the provided health ID' });
+            }
+
+            // Check if user is already a member
+            const isMember = await FamilyGroup.isMember(id, user.user_id);
+            if (isMember) {
+                return res.status(400).json({ error: 'User is already a member of this family group' });
+            }
+
+            // Get user's primary email for invitation
+            const userEmail = await FamilyGroup.getUserPrimaryEmail(user.user_id);
+
+            if (!userEmail) {
+                return res.status(400).json({ error: 'User does not have a verified email for invitation' });
+            }
+
+            const invitation = await Invitation.create({
+                sent_by,
+                email: userEmail,
+                phone: null,
+                invitation_type: 'family',
+                related_id: id
+            });
+
+            res.status(201).json({
+                message: 'Invitation sent successfully',
+                invitation,
+                invited_user: {
+                    user_id: user.user_id,
+                    name: user.name,
+                    health_id: user.health_id
+                }
+            });
+        } catch (error) {
+            console.error('Invite user to family error:', error);
             res.status(500).json({ error: 'Failed to send invitation', details: error.message });
         }
     },

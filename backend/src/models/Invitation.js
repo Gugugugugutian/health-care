@@ -201,6 +201,49 @@ class Invitation {
         return result.affectedRows;
     }
 
+    // Find challenge by name
+    static async findChallengeByName(challengeName, userId) {
+        const [rows] = await pool.execute(
+            `SELECT wc.challenge_id
+             FROM wellness_challenges wc
+             LEFT JOIN challenge_participants cp ON wc.challenge_id = cp.challenge_id AND cp.user_id = ?
+             WHERE wc.title = ? AND (wc.created_by = ? OR cp.user_id = ?)`,
+            [userId, challengeName, userId, userId]
+        );
+        return rows[0];
+    }
+
+    // Find family group by identifier (name or ID)
+    static async findFamilyGroupByIdentifier(identifier, userId) {
+        // Try to find by group name first (user must be a member)
+        const [rows] = await pool.execute(
+            `SELECT fg.family_id
+             FROM family_groups fg
+             JOIN family_members fm ON fg.family_id = fm.family_id
+             WHERE (fg.group_name = ? OR fg.family_id = ?) AND fm.user_id = ?`,
+            [identifier, identifier, userId]
+        );
+        return rows[0];
+    }
+
+    // Find user by health ID
+    static async findUserByHealthId(healthId) {
+        const [rows] = await pool.execute(
+            'SELECT user_id, name, health_id FROM users WHERE health_id = ?',
+            [healthId]
+        );
+        return rows[0];
+    }
+
+    // Get user's primary email
+    static async getUserPrimaryEmail(userId) {
+        const [rows] = await pool.execute(
+            'SELECT email FROM user_emails WHERE user_id = ? AND is_primary = TRUE AND verified = TRUE',
+            [userId]
+        );
+        return rows[0]?.email;
+    }
+
     // Get invitation statistics
     static async getStats(userId) {
         const [rows] = await pool.execute(

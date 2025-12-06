@@ -125,7 +125,7 @@ const invitationController = {
     // Create invitation (generic)
     createInvitation: async (req, res) => {
         try {
-            const { email, phone, invitation_type, related_id } = req.body;
+            const { email, phone, invitation_type, related_id, challenge_name, family_group_identifier, recipient_health_id } = req.body;
             const sent_by = req.user.user_id;
 
             // Validate inputs
@@ -133,22 +133,57 @@ const invitationController = {
                 return res.status(400).json({ error: 'Invalid invitation type' });
             }
 
-            if (!email && !phone) {
-                return res.status(400).json({ error: 'Email or phone is required' });
+            let finalEmail = email;
+            let finalPhone = phone;
+
+            // If recipient_health_id is provided, find user and get their email
+            if (recipient_health_id && !email && !phone) {
+                const user = await Invitation.findUserByHealthId(recipient_health_id);
+                if (!user) {
+                    return res.status(404).json({ error: 'User not found with the provided health ID' });
+                }
+                const userEmail = await Invitation.getUserPrimaryEmail(user.user_id);
+                if (!userEmail) {
+                    return res.status(400).json({ error: 'User does not have a verified email for invitation' });
+                }
+                finalEmail = userEmail;
+            } else if (!email && !phone) {
+                return res.status(400).json({ error: 'Email, phone, or recipient health ID is required' });
             }
 
-            if (!related_id) {
-                return res.status(400).json({ error: 'Related ID is required' });
+            let finalRelatedId = related_id;
+
+            // If challenge_name is provided, find the challenge ID
+            if (challenge_name && !related_id) {
+                const challenge = await Invitation.findChallengeByName(challenge_name, sent_by);
+                if (!challenge) {
+                    return res.status(404).json({ error: 'Challenge not found with the provided name' });
+                }
+                finalRelatedId = challenge.challenge_id;
             }
 
-            // TODO: Validate that related_id exists and user has permission to invite
+            // If family_group_identifier is provided, find the family group ID
+            if (family_group_identifier && !related_id) {
+                // Try to find by group name first
+                const familyGroup = await Invitation.findFamilyGroupByIdentifier(family_group_identifier, sent_by);
+                if (!familyGroup) {
+                    return res.status(404).json({ error: 'Family group not found with the provided identifier' });
+                }
+                finalRelatedId = familyGroup.family_id;
+            }
+
+            if (!finalRelatedId) {
+                return res.status(400).json({ error: 'Related ID or identifier is required' });
+            }
+
+            // TODO: Validate that finalRelatedId exists and user has permission to invite
 
             const invitation = await Invitation.create({
                 sent_by,
-                email: email || null,
-                phone: phone || null,
+                email: finalEmail || null,
+                phone: finalPhone || null,
                 invitation_type,
-                related_id
+                related_id: finalRelatedId
             });
 
             res.status(201).json({

@@ -194,6 +194,15 @@ class FamilyGroup {
         return rows[0];
     }
 
+    // Get user's primary email
+    static async getUserPrimaryEmail(userId) {
+        const [rows] = await pool.execute(
+            'SELECT email FROM user_emails WHERE user_id = ? AND is_primary = TRUE AND verified = TRUE',
+            [userId]
+        );
+        return rows[0]?.email;
+    }
+
     // Get family group statistics
     static async getStats(userId) {
         const [rows] = await pool.execute(

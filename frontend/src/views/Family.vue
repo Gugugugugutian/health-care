@@ -109,16 +109,12 @@
     <!-- Invite Modal -->
     <div v-if="showInviteModalVisible" class="modal-overlay" @click="showInviteModalVisible = false">
       <div class="modal-content" @click.stop>
-        <h2>邀请加入家庭组</h2>
+        <h2>邀请用户加入家庭组</h2>
         <form @submit.prevent="sendInvites">
           <div class="form-group">
-            <label>邀请列表（每行一个邮箱或电话）*</label>
-            <textarea
-              v-model="inviteList"
-              rows="5"
-              required
-              placeholder="email@example.com&#10;+1234567890"
-            ></textarea>
+            <label>用户健康ID (Health ID) *</label>
+            <input v-model="inviteUserId" type="text" required placeholder="例如：HT001、HT002" />
+            <p class="form-hint">要邀请的用户的健康ID（包含字母和数字）。用户可以在个人资料页面查看自己的健康ID。</p>
           </div>
           <div class="form-actions">
             <button type="button" @click="showInviteModalVisible = false" class="cancel-btn">取消</button>
@@ -145,7 +141,7 @@ const showAddModal = ref(false);
 const showAddMemberModalVisible = ref(false);
 const showInviteModalVisible = ref(false);
 const currentFamilyId = ref(null);
-const inviteList = ref('');
+const inviteUserId = ref('');
 
 const newFamilyGroup = ref({
   group_name: '',
@@ -237,15 +233,13 @@ const removeMember = async (familyId, userId) => {
 
 const showInviteModal = (familyId) => {
   currentFamilyId.value = familyId;
-  inviteList.value = '';
+  inviteUserId.value = '';
   showInviteModalVisible.value = true;
 };
 
 const sendInvites = async () => {
-  const invites = inviteList.value.split('\n').filter(line => line.trim());
-
-  if (invites.length === 0) {
-    error.value = '请输入至少一个邮箱或电话';
+  if (!inviteUserId.value.trim()) {
+    error.value = '请输入用户健康ID';
     return;
   }
 
@@ -253,30 +247,11 @@ const sendInvites = async () => {
     error.value = '';
     success.value = '';
 
-    // Send invites one by one (backend API only accepts single email or phone)
-    const results = [];
-    for (const invite of invites) {
-      const isEmail = invite.includes('@');
-      const inviteData = isEmail ? { email: invite } : { phone: invite };
-      try {
-        await familyService.invite(currentFamilyId.value, inviteData);
-        results.push({ invite, success: true });
-      } catch (err) {
-        results.push({ invite, success: false, error: err.response?.data?.error });
-      }
-    }
-
-    const successCount = results.filter(r => r.success).length;
-    if (successCount === invites.length) {
-      success.value = `所有邀请发送成功 (${successCount}/${invites.length})`;
-    } else {
-      success.value = `部分邀请发送成功 (${successCount}/${invites.length})`;
-      const failed = results.filter(r => !r.success).map(r => r.invite).join(', ');
-      error.value = `以下邀请发送失败: ${failed}`;
-    }
-
+    // Send invitation to user by health ID
+    await familyService.inviteUser(currentFamilyId.value, { health_id: inviteUserId.value.trim() });
+    success.value = '邀请发送成功';
     showInviteModalVisible.value = false;
-    inviteList.value = '';
+    inviteUserId.value = '';
   } catch (err) {
     error.value = err.response?.data?.error || '发送邀请失败';
   }

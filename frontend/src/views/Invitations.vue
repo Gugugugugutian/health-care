@@ -39,7 +39,7 @@
             </span>
           </div>
           <div class="invitation-details">
-            <p><strong>收件人:</strong> {{ invitation.recipient_email || invitation.recipient_phone }}</p>
+            <p><strong>收件人:</strong> {{ invitation.email || invitation.phone || '未知' }}</p>
             <p><strong>发送时间:</strong> {{ formatDate(invitation.created_at) }}</p>
             <p v-if="invitation.completed_at">
               <strong>{{ invitation.status === 'accepted' ? '接受时间' : '过期时间' }}:</strong>
@@ -80,25 +80,27 @@
               <option value="">选择类型</option>
               <option value="challenge">健康挑战</option>
               <option value="family">家庭组</option>
-              <option value="data_share">数据共享</option>
             </select>
           </div>
           <div class="form-group">
-            <label>收件人邮箱或电话 *</label>
+            <label>用户健康ID (Health ID) *</label>
             <input
-              v-model="newInvitation.recipient"
+              v-model="newInvitation.recipient_health_id"
               type="text"
               required
-              placeholder="email@example.com 或 +1234567890"
+              placeholder="例如：HT001、HT002"
             />
+            <p class="form-hint">要邀请的用户的健康ID（包含字母和数字）</p>
           </div>
           <div class="form-group" v-if="newInvitation.invitation_type === 'challenge'">
-            <label>挑战ID</label>
-            <input v-model="newInvitation.challenge_id" type="number" />
+            <label>挑战名称 *</label>
+            <input v-model="newInvitation.challenge_name" type="text" required placeholder="例如：December Fitness Challenge" />
+            <p class="form-hint">要邀请的挑战的名称</p>
           </div>
           <div class="form-group" v-if="newInvitation.invitation_type === 'family'">
-            <label>家庭组ID</label>
-            <input v-model="newInvitation.family_group_id" type="number" />
+            <label>家庭组标识符</label>
+            <input v-model="newInvitation.family_group_identifier" type="text" placeholder="例如：家庭组名称或标识符" />
+            <p class="form-hint">家庭组的名称或其他标识符</p>
           </div>
           <div class="form-actions">
             <button type="button" @click="showAddModal = false" class="cancel-btn">取消</button>
@@ -127,9 +129,9 @@ const activeTab = ref('sent');
 
 const newInvitation = ref({
   invitation_type: '',
-  recipient: '',
-  challenge_id: '',
-  family_group_id: '',
+  recipient_health_id: '',
+  challenge_name: '',
+  family_group_identifier: '',
 });
 
 const currentInvitations = computed(() => {
@@ -152,7 +154,6 @@ const getInvitationType = (invitation) => {
   const types = {
     challenge: '健康挑战邀请',
     family: '家庭组邀请',
-    data_share: '数据共享邀请',
   };
   return types[invitation.invitation_type] || '邀请';
 };
@@ -192,20 +193,15 @@ const loadInvitations = async () => {
 const sendInvitation = async () => {
   const invitationData = {
     invitation_type: newInvitation.value.invitation_type,
+    recipient_health_id: newInvitation.value.recipient_health_id,
   };
 
-  if (newInvitation.value.recipient.includes('@')) {
-    invitationData.recipient_email = newInvitation.value.recipient;
-  } else {
-    invitationData.recipient_phone = newInvitation.value.recipient;
+  if (newInvitation.value.challenge_name) {
+    invitationData.challenge_name = newInvitation.value.challenge_name;
   }
 
-  if (newInvitation.value.challenge_id) {
-    invitationData.challenge_id = parseInt(newInvitation.value.challenge_id);
-  }
-
-  if (newInvitation.value.family_group_id) {
-    invitationData.family_group_id = parseInt(newInvitation.value.family_group_id);
+  if (newInvitation.value.family_group_identifier) {
+    invitationData.family_group_identifier = newInvitation.value.family_group_identifier;
   }
 
   try {
@@ -216,9 +212,9 @@ const sendInvitation = async () => {
     showAddModal.value = false;
     newInvitation.value = {
       invitation_type: '',
-      recipient: '',
-      challenge_id: '',
-      family_group_id: '',
+      recipient_health_id: '',
+      challenge_name: '',
+      family_group_identifier: '',
     };
     await loadInvitations();
   } catch (err) {

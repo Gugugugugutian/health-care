@@ -42,7 +42,7 @@ const validateConsultationType = (type) => {
 };
 
 const validateInvitationType = (type) => {
-    return ['challenge', 'family', 'data_share'].includes(type);
+    return ['challenge', 'family'].includes(type);
 };
 
 module.exports = {
