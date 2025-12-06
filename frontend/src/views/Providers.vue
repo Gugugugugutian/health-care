@@ -26,7 +26,7 @@
         <div v-else class="providers-grid">
           <div
             v-for="provider in myProviders"
-            :key="provider.id"
+            :key="provider.provider_id"
             class="provider-card"
           >
             <h3>{{ provider.name }}</h3>
@@ -38,7 +38,7 @@
               </span>
               <span v-if="provider.is_primary" class="badge primary">主要</span>
               <button
-                @click="unlinkProvider(provider.id)"
+                @click="unlinkProvider(provider.provider_id)"
                 class="unlink-btn"
               >
                 取消关联
@@ -56,7 +56,7 @@
         <div v-else class="providers-grid">
           <div
             v-for="provider in allProviders"
-            :key="provider.id"
+            :key="provider.provider_id"
             class="provider-card"
           >
             <h3>{{ provider.name }}</h3>
@@ -67,15 +67,15 @@
                 {{ provider.verified ? '已验证' : '未验证' }}
               </span>
               <button
-                v-if="!isMyProvider(provider.id)"
-                @click="linkProvider(provider.id)"
+                v-if="!isMyProvider(provider.provider_id)"
+                @click="linkProvider(provider.provider_id)"
                 class="link-btn"
               >
                 关联
               </button>
               <button
-                v-if="!isMyProvider(provider.id)"
-                @click="linkProvider(provider.id, true)"
+                v-if="!isMyProvider(provider.provider_id)"
+                @click="linkProvider(provider.provider_id, true)"
                 class="link-primary-btn"
               >
                 设为主要
@@ -98,6 +98,14 @@
           <div class="form-group">
             <label>许可证号 *</label>
             <input v-model="newProvider.license_number" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>邮箱</label>
+            <input v-model="newProvider.email" type="email" />
+          </div>
+          <div class="form-group">
+            <label>电话</label>
+            <input v-model="newProvider.phone" type="tel" />
           </div>
           <div class="form-group">
             <label>专业 *</label>
@@ -131,6 +139,8 @@ const showAddModal = ref(false);
 const newProvider = ref({
   name: '',
   license_number: '',
+  email: '',
+  phone: '',
   specialty: '',
 });
 
@@ -165,7 +175,7 @@ const searchProviders = async () => {
 };
 
 const isMyProvider = (providerId) => {
-  return myProviders.value.some(p => p.id === providerId);
+  return myProviders.value.some(p => p.provider_id === providerId);
 };
 
 const linkProvider = async (providerId, isPrimary = false) => {
@@ -201,7 +211,7 @@ const addProvider = async () => {
     await providerService.create(newProvider.value);
     success.value = '提供者添加成功';
     showAddModal.value = false;
-    newProvider.value = { name: '', license_number: '', specialty: '' };
+    newProvider.value = { name: '', license_number: '', email: '', phone: '', specialty: '' };
     await loadProviders();
   } catch (err) {
     error.value = err.response?.data?.error || '添加失败';

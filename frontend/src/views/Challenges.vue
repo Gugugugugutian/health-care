@@ -26,7 +26,7 @@
         <div v-else class="challenges-grid">
           <div
             v-for="challenge in myChallenges"
-            :key="challenge.id"
+            :key="challenge.challenge_id"
             class="challenge-card"
           >
             <h3>{{ challenge.title || challenge.goal || challenge.challenge_goal }}</h3>
@@ -56,6 +56,20 @@
               >
                 邀请
               </button>
+              <button
+                v-if="challenge.user_role === 'creator'"
+                @click="deleteChallenge(challenge.challenge_id)"
+                class="delete-btn"
+              >
+                删除
+              </button>
+              <button
+                v-if="challenge.user_role === 'participant'"
+                @click="leaveChallenge(challenge.challenge_id)"
+                class="leave-btn"
+              >
+                退出
+              </button>
             </div>
           </div>
         </div>
@@ -69,7 +83,7 @@
         <div v-else class="challenges-grid">
           <div
             v-for="challenge in activeChallenges"
-            :key="challenge.id"
+            :key="challenge.challenge_id"
             class="challenge-card"
           >
             <h3>{{ challenge.title || challenge.goal || challenge.challenge_goal }}</h3>
@@ -79,8 +93,8 @@
             </p>
             <div class="challenge-actions">
               <button
-                v-if="!isMyChallenge(challenge.id)"
-                @click="joinChallenge(challenge.id)"
+                v-if="!isMyChallenge(challenge.challenge_id)"
+                @click="joinChallenge(challenge.challenge_id)"
                 class="join-btn"
               >
                 加入挑战
@@ -236,7 +250,7 @@ const searchChallenges = async () => {
 };
 
 const isMyChallenge = (challengeId) => {
-  return myChallenges.value.some(c => c.id === challengeId);
+  return myChallenges.value.some(c => c.challenge_id === challengeId);
 };
 
 const createChallenge = async () => {
@@ -254,7 +268,7 @@ const createChallenge = async () => {
 };
 
 const showProgressModal = (challenge) => {
-  currentChallengeId.value = challenge.id;
+  currentChallengeId.value = challenge.challenge_id;
   progressValue.value = challenge.progress || 0;
   showProgressModalVisible.value = true;
 };
@@ -273,7 +287,7 @@ const updateProgress = async () => {
 };
 
 const showInviteModal = (challenge) => {
-  currentChallengeId.value = challenge.id;
+  currentChallengeId.value = challenge.challenge_id;
   inviteList.value = '';
   showInviteModalVisible.value = true;
 };
@@ -329,6 +343,34 @@ const joinChallenge = async (id) => {
     await loadChallenges();
   } catch (err) {
     error.value = err.response?.data?.error || '加入挑战失败';
+  }
+};
+
+const deleteChallenge = async (id) => {
+  if (!confirm('确定要删除这个挑战吗？此操作不可撤销。')) return;
+
+  try {
+    error.value = '';
+    success.value = '';
+    await challengeService.delete(id);
+    success.value = '挑战已删除';
+    await loadChallenges();
+  } catch (err) {
+    error.value = err.response?.data?.error || '删除挑战失败';
+  }
+};
+
+const leaveChallenge = async (id) => {
+  if (!confirm('确定要退出这个挑战吗？')) return;
+
+  try {
+    error.value = '';
+    success.value = '';
+    await challengeService.leave(id);
+    success.value = '已退出挑战';
+    await loadChallenges();
+  } catch (err) {
+    error.value = err.response?.data?.error || '退出挑战失败';
   }
 };
 
@@ -478,7 +520,9 @@ h1 {
 
 .update-btn,
 .invite-btn,
-.join-btn {
+.join-btn,
+.delete-btn,
+.leave-btn {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
@@ -502,9 +546,21 @@ h1 {
   color: white;
 }
 
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.leave-btn {
+  background-color: #ffc107;
+  color: #333;
+}
+
 .update-btn:hover,
 .invite-btn:hover,
-.join-btn:hover {
+.join-btn:hover,
+.delete-btn:hover,
+.leave-btn:hover {
   opacity: 0.9;
 }
 

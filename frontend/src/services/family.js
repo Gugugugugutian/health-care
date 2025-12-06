@@ -44,8 +44,8 @@ export const familyService = {
   },
 
   // Invite to family group
-  invite: async (familyId, invites) => {
-    const response = await api.post(`/family/${familyId}/invite`, { invites });
+  invite: async (familyId, inviteData) => {
+    const response = await api.post(`/family/${familyId}/invite`, inviteData);
     return response.data;
   },
 

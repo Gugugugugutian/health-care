@@ -54,5 +54,17 @@ export const challengeService = {
     const response = await api.post(`/challenges/${id}/invite`, inviteData);
     return response.data;
   },
+
+  // Delete challenge
+  delete: async (id) => {
+    const response = await api.delete(`/challenges/${id}`);
+    return response.data;
+  },
+
+  // Leave challenge
+  leave: async (id) => {
+    const response = await api.delete(`/challenges/${id}/leave`);
+    return response.data;
+  },
 };
 

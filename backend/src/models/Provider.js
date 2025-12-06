@@ -42,30 +42,61 @@ class Provider {
 
     // Link provider to user
     static async linkToUser(userId, providerId, isPrimary = false) {
-        const connection = await pool.getConnection();
         try {
-            await connection.beginTransaction();
+            console.log(`linkToUser: Starting for user ${userId}, provider ${providerId}, isPrimary: ${isPrimary}`);
 
+            // Check if already linked
+            const [existing] = await pool.execute(
+                'SELECT user_provider_id FROM user_providers WHERE user_id = ? AND provider_id = ? AND unlinked_at IS NULL',
+                [userId, providerId]
+            );
+
+            console.log(`linkToUser: Existing links found: ${existing.length}`);
+
+            if (existing.length > 0) {
+                console.log(`linkToUser: Provider already linked, user_provider_id: ${existing[0].user_provider_id}`);
+                // Already linked, update is_primary if needed
+                if (isPrimary) {
+                    console.log(`linkToUser: Setting as primary, updating other providers...`);
+                    // First, set all other providers as non-primary
+                    const [updateOthersResult] = await pool.execute(
+                        'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ?',
+                        [userId]
+                    );
+                    console.log(`linkToUser: Updated ${updateOthersResult.affectedRows} other providers to non-primary`);
+
+                    // Then set this one as primary
+                    const [updatePrimaryResult] = await pool.execute(
+                        'UPDATE user_providers SET is_primary = TRUE WHERE user_id = ? AND provider_id = ?',
+                        [userId, providerId]
+                    );
+                    console.log(`linkToUser: Set provider as primary, affected rows: ${updatePrimaryResult.affectedRows}`);
+                }
+                return existing[0].user_provider_id;
+            }
+
+            console.log(`linkToUser: Provider not linked, creating new link...`);
             // If setting as primary, update existing primary providers
             if (isPrimary) {
-                await connection.execute(
+                console.log(`linkToUser: Setting as primary, updating existing primary providers...`);
+                const [updateResult] = await pool.execute(
                     'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ?',
                     [userId]
                 );
+                console.log(`linkToUser: Updated ${updateResult.affectedRows} existing primary providers`);
             }
 
-            const [result] = await connection.execute(
+            const [result] = await pool.execute(
                 'INSERT INTO user_providers (user_id, provider_id, is_primary) VALUES (?, ?, ?)',
                 [userId, providerId, isPrimary]
             );
 
-            await connection.commit();
+            console.log(`linkToUser: Inserted new link, insertId: ${result.insertId}`);
             return result.insertId;
         } catch (error) {
-            await connection.rollback();
+            console.error(`linkToUser: Error occurred:`, error.message);
+            console.error(`linkToUser: Error stack:`, error.stack);
             throw error;
-        } finally {
-            connection.release();
         }
     }
 

@@ -73,8 +73,8 @@
               <option value="">选择提供者</option>
               <option
                 v-for="provider in availableProviders"
-                :key="provider.id"
-                :value="provider.id"
+                :key="provider.provider_id"
+                :value="provider.provider_id"
               >
                 {{ provider.name }} - {{ provider.specialty }}
               </option>

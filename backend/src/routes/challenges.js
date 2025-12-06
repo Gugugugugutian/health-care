@@ -15,5 +15,7 @@ router.get('/:id', auth, challengeController.getChallengeById);
 router.post('/:id/join', auth, challengeController.joinChallenge);
 router.put('/:id/progress', auth, challengeController.updateProgress);
 router.post('/:id/invite', auth, challengeController.inviteToChallenge);
+router.delete('/:id', auth, challengeController.deleteChallenge);
+router.delete('/:id/leave', auth, challengeController.leaveChallenge);
 
 module.exports = router;

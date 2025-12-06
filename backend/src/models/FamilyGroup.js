@@ -185,6 +185,15 @@ class FamilyGroup {
         }
     }
 
+    // Find user by health ID
+    static async findUserByHealthId(healthId) {
+        const [rows] = await pool.execute(
+            'SELECT user_id, name, health_id FROM users WHERE health_id = ?',
+            [healthId]
+        );
+        return rows[0];
+    }
+
     // Get family group statistics
     static async getStats(userId) {
         const [rows] = await pool.execute(

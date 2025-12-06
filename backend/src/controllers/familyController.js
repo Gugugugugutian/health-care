@@ -78,7 +78,7 @@ const familyController = {
     addMember: async (req, res) => {
         try {
             const { id } = req.params;
-            const { user_id, relationship, can_manage } = req.body;
+            const { user_id, health_id, relationship, can_manage } = req.body;
             const currentUserId = req.user.user_id;
 
             // Check if current user can manage the family group
@@ -87,7 +87,21 @@ const familyController = {
                 return res.status(403).json({ error: 'You do not have permission to add members' });
             }
 
-            const memberId = await FamilyGroup.addMember(id, user_id, relationship, can_manage || false);
+            // Get user_id from health_id if provided
+            let targetUserId = user_id;
+            if (health_id && !user_id) {
+                const user = await FamilyGroup.findUserByHealthId(health_id);
+                if (!user) {
+                    return res.status(404).json({ error: 'User not found with the provided health ID' });
+                }
+                targetUserId = user.user_id;
+            }
+
+            if (!targetUserId) {
+                return res.status(400).json({ error: 'Either user_id or health_id is required' });
+            }
+
+            const memberId = await FamilyGroup.addMember(id, targetUserId, relationship, can_manage || false);
 
             if (memberId === null) {
                 return res.status(400).json({ error: 'User is already a member of this family group' });
@@ -97,7 +111,7 @@ const familyController = {
                 message: 'Member added successfully',
                 family_id: id,
                 member_id: memberId,
-                user_id,
+                user_id: targetUserId,
                 relationship: relationship || null,
                 can_manage: can_manage || false
             });

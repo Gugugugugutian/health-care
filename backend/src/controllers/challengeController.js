@@ -276,6 +276,78 @@ const challengeController = {
             console.error('Get challenge stats error:', error);
             res.status(500).json({ error: 'Failed to get challenge statistics', details: error.message });
         }
+    },
+
+    // Delete challenge
+    deleteChallenge: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const userId = req.user.user_id;
+
+            // Check if challenge exists
+            const challenge = await WellnessChallenge.findById(id);
+            if (!challenge) {
+                return res.status(404).json({ error: 'Challenge not found' });
+            }
+
+            // Check if user is the creator
+            if (challenge.created_by != userId) {
+                return res.status(403).json({ error: 'Only the challenge creator can delete it' });
+            }
+
+            const success = await WellnessChallenge.delete(id, userId);
+
+            if (!success) {
+                return res.status(400).json({ error: 'Failed to delete challenge' });
+            }
+
+            res.json({
+                message: 'Challenge deleted successfully',
+                challenge_id: id
+            });
+        } catch (error) {
+            console.error('Delete challenge error:', error);
+            res.status(500).json({ error: 'Failed to delete challenge', details: error.message });
+        }
+    },
+
+    // Leave challenge
+    leaveChallenge: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const userId = req.user.user_id;
+
+            // Check if challenge exists
+            const challenge = await WellnessChallenge.findById(id);
+            if (!challenge) {
+                return res.status(404).json({ error: 'Challenge not found' });
+            }
+
+            // Check if user is the creator (creators cannot leave, they must delete)
+            if (challenge.created_by == userId) {
+                return res.status(400).json({ error: 'Challenge creator cannot leave. Please delete the challenge instead.' });
+            }
+
+            // Check if user is participating
+            const userProgress = await WellnessChallenge.getUserProgress(id, userId);
+            if (!userProgress) {
+                return res.status(400).json({ error: 'You are not participating in this challenge' });
+            }
+
+            const success = await WellnessChallenge.leaveChallenge(id, userId);
+
+            if (!success) {
+                return res.status(400).json({ error: 'Failed to leave challenge' });
+            }
+
+            res.json({
+                message: 'Successfully left the challenge',
+                challenge_id: id
+            });
+        } catch (error) {
+            console.error('Leave challenge error:', error);
+            res.status(500).json({ error: 'Failed to leave challenge', details: error.message });
+        }
     }
 };
 

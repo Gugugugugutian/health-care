@@ -186,6 +186,59 @@ class WellnessChallenge {
         );
         return rows[0];
     }
+
+    // Delete challenge (only creator can delete)
+    static async delete(challengeId, userId) {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // Check if user is the creator
+            const [challengeRows] = await connection.execute(
+                'SELECT created_by FROM wellness_challenges WHERE challenge_id = ?',
+                [challengeId]
+            );
+
+            if (challengeRows.length === 0) {
+                await connection.rollback();
+                return false;
+            }
+
+            if (challengeRows[0].created_by != userId) {
+                await connection.rollback();
+                return false;
+            }
+
+            // Delete participants first
+            await connection.execute(
+                'DELETE FROM challenge_participants WHERE challenge_id = ?',
+                [challengeId]
+            );
+
+            // Delete the challenge
+            const [result] = await connection.execute(
+                'DELETE FROM wellness_challenges WHERE challenge_id = ?',
+                [challengeId]
+            );
+
+            await connection.commit();
+            return result.affectedRows > 0;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+
+    // Leave challenge (remove participant)
+    static async leaveChallenge(challengeId, userId) {
+        const [result] = await pool.execute(
+            'DELETE FROM challenge_participants WHERE challenge_id = ? AND user_id = ?',
+            [challengeId, userId]
+        );
+        return result.affectedRows > 0;
+    }
 }
 
 module.exports = WellnessChallenge;

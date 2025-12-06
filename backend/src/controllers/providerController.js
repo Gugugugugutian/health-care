@@ -12,11 +12,11 @@ const providerController = {
                 return res.status(400).json({ error: 'Invalid license number format' });
             }
 
-            if (email && !validateEmail(email)) {
+            if (email && email.trim() !== '' && !validateEmail(email)) {
                 return res.status(400).json({ error: 'Invalid email format' });
             }
 
-            if (phone && !validatePhone(phone)) {
+            if (phone && phone.trim() !== '' && !validatePhone(phone)) {
                 return res.status(400).json({ error: 'Invalid phone number format' });
             }
 
@@ -95,19 +95,43 @@ const providerController = {
     // Link provider to user
     linkProvider: async (req, res) => {
         try {
+            // Check if req.body exists and is an object
+            if (!req.body || typeof req.body !== 'object') {
+                return res.status(400).json({ error: 'Request body is missing or invalid' });
+            }
+
             const { provider_id, is_primary } = req.body;
-            const userId = req.user.user_id;
+            const userId = req.user?.user_id;
+
+            // Validate input
+            if (!provider_id) {
+                return res.status(400).json({ error: 'Provider ID is required' });
+            }
+
+            // Convert provider_id to number if it's a string
+            const providerIdNum = parseInt(provider_id);
+            if (isNaN(providerIdNum)) {
+                return res.status(400).json({ error: 'Invalid provider ID format' });
+            }
+
+            console.log('linkProvider: Looking for provider with ID:', providerIdNum);
 
             // Check if provider exists
-            const provider = await Provider.findById(provider_id);
+            const provider = await Provider.findById(providerIdNum);
+            console.log('linkProvider: Found provider:', provider ? 'Yes' : 'No');
+
             if (!provider) {
                 return res.status(404).json({ error: 'Provider not found' });
             }
 
-            const linkId = await Provider.linkToUser(userId, provider_id, is_primary || false);
+            console.log('linkProvider: Calling linkToUser with:', { userId, providerId: providerIdNum, isPrimary: is_primary || false });
+
+            const linkId = await Provider.linkToUser(userId, providerIdNum, is_primary || false);
+
+            console.log('linkProvider: Link created successfully, linkId:', linkId);
 
             res.status(201).json({
-                message: 'Provider linked successfully',
+                message: is_primary ? 'Provider set as primary successfully' : 'Provider linked successfully',
                 link_id: linkId,
                 provider: {
                     id: provider.provider_id,
@@ -119,7 +143,24 @@ const providerController = {
             });
         } catch (error) {
             console.error('Link provider error:', error);
-            res.status(500).json({ error: 'Failed to link provider', details: error.message });
+            console.error('Error stack:', error.stack);
+            console.error('Request details:', {
+                body: req.body,
+                userId: req.user.user_id,
+                user: req.user
+            });
+
+            // Build error response safely
+            const errorResponse = {
+                error: 'Failed to link provider',
+                message: error.message
+            };
+
+            // Add optional fields if they exist
+            if (error.code) errorResponse.code = error.code;
+            if (error.sqlState) errorResponse.sqlState = error.sqlState;
+
+            res.status(500).json(errorResponse);
         }
     },
 

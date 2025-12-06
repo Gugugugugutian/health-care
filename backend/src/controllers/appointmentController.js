@@ -26,17 +26,20 @@ const appointmentController = {
             let provider = null;
 
             // Determine provider by provider_id, license_number, or email
-            if (provider_id) {
+            if (provider_id && provider_id.toString().trim() !== '') {
                 // Existing method: by provider ID
                 provider = await Provider.findById(provider_id);
-            } else if (license_number) {
+            } else if (license_number && license_number.trim() !== '') {
                 // New method: by license number
                 provider = await Provider.findByLicenseOrVerifiedEmail(license_number, null);
-            } else if (email) {
+            } else if (email && email.trim() !== '') {
                 // New method: by verified email
                 provider = await Provider.findByLicenseOrVerifiedEmail(null, email);
             } else {
-                return res.status(400).json({ error: 'Must provide provider_id, license_number, or email' });
+                return res.status(400).json({
+                    error: 'Must provide provider_id, license_number, or email',
+                    details: 'At least one provider identifier is required'
+                });
             }
 
             if (!provider) {

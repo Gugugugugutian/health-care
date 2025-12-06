@@ -14,13 +14,13 @@
       <div v-else class="family-grid">
         <div
           v-for="group in familyGroups"
-          :key="group.id"
+          :key="group.family_id"
           class="family-card"
         >
           <div class="family-header">
-            <h3>{{ group.group_name || `家庭组 #${group.id}` }}</h3>
+            <h3>{{ group.group_name || `家庭组 #${group.family_id}` }}</h3>
             <button
-              @click="deleteFamilyGroup(group.id)"
+              @click.stop="deleteFamilyGroup(group.family_id)"
               class="delete-btn"
             >
               删除
@@ -40,7 +40,7 @@
                 <span>{{ member.name || `用户 ${member.user_id}` }}</span>
                 <span class="member-role">{{ member.relationship || '成员' }}</span>
                 <button
-                  @click="removeMember(group.id, member.user_id)"
+                  @click.stop="removeMember(group.family_id, member.user_id)"
                   class="remove-btn"
                 >
                   移除
@@ -49,13 +49,13 @@
             </div>
             <div class="member-actions">
               <button
-                @click="showAddMemberModal(group.id)"
+                @click.stop="showAddMemberModal(group.family_id)"
                 class="add-member-btn"
               >
                 添加成员
               </button>
               <button
-                @click="showInviteModal(group.id)"
+                @click.stop="showInviteModal(group.family_id)"
                 class="invite-btn"
               >
                 邀请
@@ -89,12 +89,14 @@
         <h2>添加成员</h2>
         <form @submit.prevent="addMember">
           <div class="form-group">
-            <label>用户ID *</label>
-            <input v-model="newMember.user_id" type="number" required />
+            <label>用户健康ID (Health ID) *</label>
+            <input v-model="newMember.health_id" type="text" required placeholder="例如：HT001、HT002" />
+            <p class="form-hint">需要添加用户的健康ID（包含字母和数字）。用户可以在个人资料页面查看自己的健康ID。</p>
           </div>
           <div class="form-group">
             <label>关系</label>
             <input v-model="newMember.relationship" type="text" placeholder="例如：父亲、母亲、孩子" />
+            <p class="form-hint">可选，用于标识家庭成员关系</p>
           </div>
           <div class="form-actions">
             <button type="button" @click="showAddMemberModalVisible = false" class="cancel-btn">取消</button>
@@ -150,14 +152,35 @@ const newFamilyGroup = ref({
 });
 
 const newMember = ref({
-  user_id: '',
+  health_id: '',
   relationship: '',
 });
 
 const loadFamilyGroups = async () => {
   try {
     loading.value = true;
-    familyGroups.value = await familyService.getAll();
+    const groups = await familyService.getAll();
+
+    // Load members for each family group
+    const groupsWithMembers = await Promise.all(
+      groups.map(async (group) => {
+        try {
+          const groupDetails = await familyService.getById(group.family_id);
+          return {
+            ...group,
+            members: groupDetails.members || []
+          };
+        } catch (err) {
+          console.error(`Failed to load members for family ${group.family_id}:`, err);
+          return {
+            ...group,
+            members: []
+          };
+        }
+      })
+    );
+
+    familyGroups.value = groupsWithMembers;
   } catch (err) {
     error.value = err.response?.data?.error || '加载家庭组失败';
   } finally {
@@ -181,7 +204,7 @@ const createFamilyGroup = async () => {
 
 const showAddMemberModal = (familyId) => {
   currentFamilyId.value = familyId;
-  newMember.value = { user_id: '', relationship: '' };
+  newMember.value = { health_id: '', relationship: '' };
   showAddMemberModalVisible.value = true;
 };
 
@@ -220,12 +243,38 @@ const showInviteModal = (familyId) => {
 
 const sendInvites = async () => {
   const invites = inviteList.value.split('\n').filter(line => line.trim());
-  
+
+  if (invites.length === 0) {
+    error.value = '请输入至少一个邮箱或电话';
+    return;
+  }
+
   try {
     error.value = '';
     success.value = '';
-    await familyService.invite(currentFamilyId.value, invites);
-    success.value = '邀请发送成功';
+
+    // Send invites one by one (backend API only accepts single email or phone)
+    const results = [];
+    for (const invite of invites) {
+      const isEmail = invite.includes('@');
+      const inviteData = isEmail ? { email: invite } : { phone: invite };
+      try {
+        await familyService.invite(currentFamilyId.value, inviteData);
+        results.push({ invite, success: true });
+      } catch (err) {
+        results.push({ invite, success: false, error: err.response?.data?.error });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    if (successCount === invites.length) {
+      success.value = `所有邀请发送成功 (${successCount}/${invites.length})`;
+    } else {
+      success.value = `部分邀请发送成功 (${successCount}/${invites.length})`;
+      const failed = results.filter(r => !r.success).map(r => r.invite).join(', ');
+      error.value = `以下邀请发送失败: ${failed}`;
+    }
+
     showInviteModalVisible.value = false;
     inviteList.value = '';
   } catch (err) {
@@ -464,6 +513,13 @@ h1 {
 .form-group textarea:focus {
   outline: none;
   border-color: #667eea;
+}
+
+.form-hint {
+  margin: 0.25rem 0 0 0;
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .form-actions {
