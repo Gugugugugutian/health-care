@@ -131,9 +131,8 @@ const authController = {
             // Remove sensitive data
             delete user.password_hash;
 
-            res.json({
-                user
-            });
+            // Return user object directly (not wrapped in { user })
+            res.json(user);
         } catch (error) {
             console.error('Get profile error:', error);
             res.status(500).json({ error: 'Failed to get profile', details: error.message });
@@ -201,6 +200,109 @@ const authController = {
         } catch (error) {
             console.error('Verify phone error:', error);
             res.status(500).json({ error: 'Failed to verify phone', details: error.message });
+        }
+    },
+
+    // Update user profile
+    updateProfile: async (req, res) => {
+        try {
+            const { name, phone } = req.body;
+            const updates = {};
+
+            if (name !== undefined) {
+                if (typeof name !== 'string' || name.trim().length < 2) {
+                    return res.status(400).json({ error: 'Name must be at least 2 characters' });
+                }
+                updates.name = name.trim();
+            }
+
+            if (phone !== undefined) {
+                const { validatePhone } = require('../utils/validators');
+                if (!validatePhone(phone)) {
+                    return res.status(400).json({ error: 'Invalid phone number format' });
+                }
+                updates.phone = phone;
+            }
+
+            if (Object.keys(updates).length === 0) {
+                return res.status(400).json({ error: 'No valid fields to update' });
+            }
+
+            const success = await User.update(req.user.user_id, updates);
+
+            if (!success) {
+                return res.status(400).json({ error: 'Failed to update profile' });
+            }
+
+            // Get updated user data
+            const updatedUser = await User.findById(req.user.user_id);
+            delete updatedUser.password_hash;
+
+            res.json({
+                message: 'Profile updated successfully',
+                user: updatedUser
+            });
+        } catch (error) {
+            console.error('Update profile error:', error);
+            res.status(500).json({ error: 'Failed to update profile', details: error.message });
+        }
+    },
+
+    // Delete email
+    deleteEmail: async (req, res) => {
+        try {
+            const { email_id } = req.params;
+
+            const success = await User.deleteEmail(email_id, req.user.user_id);
+
+            if (!success) {
+                return res.status(404).json({ error: 'Email not found' });
+            }
+
+            res.json({
+                message: 'Email deleted successfully',
+                email_id
+            });
+        } catch (error) {
+            console.error('Delete email error:', error);
+            res.status(500).json({ error: 'Failed to delete email', details: error.message });
+        }
+    },
+
+    // Update phone number
+    updatePhoneNumber: async (req, res) => {
+        try {
+            const { phone } = req.body;
+
+            if (!phone) {
+                return res.status(400).json({ error: 'Phone number is required' });
+            }
+
+            const { validatePhone } = require('../utils/validators');
+            if (!validatePhone(phone)) {
+                return res.status(400).json({ error: 'Invalid phone number format' });
+            }
+
+            const success = await User.updatePhone(req.user.user_id, phone);
+
+            if (!success) {
+                return res.status(400).json({ error: 'Failed to update phone number' });
+            }
+
+            // Get updated user data
+            const updatedUser = await User.findById(req.user.user_id);
+            delete updatedUser.password_hash;
+
+            res.json({
+                message: 'Phone number updated successfully',
+                user: updatedUser
+            });
+        } catch (error) {
+            console.error('Update phone number error:', error);
+            if (error.message === 'Phone number already in use') {
+                return res.status(400).json({ error: error.message });
+            }
+            res.status(500).json({ error: 'Failed to update phone number', details: error.message });
         }
     }
 };

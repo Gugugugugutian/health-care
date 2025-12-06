@@ -141,6 +141,67 @@ class User {
         return result.affectedRows > 0;
     }
 
+    // Update user information
+    static async update(userId, updates) {
+        const allowedFields = ['name', 'phone'];
+        const fieldsToUpdate = {};
+
+        // Filter allowed fields
+        for (const field of allowedFields) {
+            if (updates[field] !== undefined) {
+                fieldsToUpdate[field] = updates[field];
+            }
+        }
+
+        if (Object.keys(fieldsToUpdate).length === 0) {
+            return false;
+        }
+
+        // Build SET clause
+        const setClause = Object.keys(fieldsToUpdate)
+            .map(field => `${field} = ?`)
+            .join(', ');
+
+        const values = Object.values(fieldsToUpdate);
+        values.push(userId);
+
+        const [result] = await pool.execute(
+            `UPDATE users SET ${setClause} WHERE user_id = ?`,
+            values
+        );
+
+        return result.affectedRows > 0;
+    }
+
+    // Delete email
+    static async deleteEmail(emailId, userId) {
+        const [result] = await pool.execute(
+            'DELETE FROM user_emails WHERE email_id = ? AND user_id = ?',
+            [emailId, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Update phone number
+    static async updatePhone(userId, newPhone) {
+        // First check if phone is already used by another user
+        const [existing] = await pool.execute(
+            'SELECT user_id FROM users WHERE phone = ? AND user_id != ?',
+            [newPhone, userId]
+        );
+
+        if (existing.length > 0) {
+            throw new Error('Phone number already in use');
+        }
+
+        const [result] = await pool.execute(
+            'UPDATE users SET phone = ?, phone_verified = FALSE WHERE user_id = ?',
+            [newPhone, userId]
+        );
+
+        return result.affectedRows > 0;
+    }
+
     // Get all users
     static async getAll() {
         const [rows] = await pool.execute(

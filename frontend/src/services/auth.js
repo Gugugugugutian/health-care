@@ -45,6 +45,24 @@ export const authService = {
     return response.data;
   },
 
+  // Update user profile
+  updateProfile: async (profileData) => {
+    const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  },
+
+  // Delete email
+  deleteEmail: async (emailId) => {
+    const response = await api.delete(`/auth/emails/${emailId}`);
+    return response.data;
+  },
+
+  // Update phone number
+  updatePhone: async (phone) => {
+    const response = await api.put('/auth/phone', { phone });
+    return response.data;
+  },
+
   // Logout
   logout: () => {
     localStorage.removeItem('token');

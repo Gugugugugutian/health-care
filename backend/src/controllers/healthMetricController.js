@@ -1,11 +1,42 @@
 const HealthMetric = require('../models/HealthMetric');
 const { validateDate } = require('../utils/validators');
 
+// Helper function to convert backend field names to frontend field names
+function convertMetricForFrontend(metric) {
+    if (!metric) return metric;
+
+    return {
+        id: metric.metric_id || metric.id,
+        metric_type: metric.metric_type || '',
+        metric_value: metric.value !== undefined && metric.value !== null ? metric.value : '',
+        recorded_date: metric.metric_date || '',
+        unit: metric.unit || '',
+        notes: metric.notes || '',
+        // Keep original fields for backward compatibility
+        ...metric
+    };
+}
+
+// Helper function to convert array of metrics
+function convertMetricsForFrontend(metrics) {
+    if (!Array.isArray(metrics)) return metrics;
+    return metrics.map(convertMetricForFrontend);
+}
+
 const healthMetricController = {
     // Add health metric
     addHealthMetric: async (req, res) => {
         try {
-            const { metric_date, metric_type, value, unit, notes } = req.body;
+            // Accept both frontend field names (recorded_date, metric_value) and backend field names (metric_date, value)
+            const {
+                metric_date,
+                recorded_date,
+                metric_type,
+                value,
+                metric_value,
+                unit,
+                notes
+            } = req.body;
             const user_id = req.user.user_id;
 
             // Validate inputs
@@ -13,18 +44,22 @@ const healthMetricController = {
                 return res.status(400).json({ error: 'Metric type must be at least 2 characters' });
             }
 
-            if (!validateDate(metric_date)) {
+            // Use recorded_date from frontend if provided, otherwise use metric_date
+            const dateToUse = recorded_date || metric_date;
+            if (!validateDate(dateToUse)) {
                 return res.status(400).json({ error: 'Invalid date format' });
             }
 
-            const valueNum = parseFloat(value);
+            // Use metric_value from frontend if provided, otherwise use value
+            const valueToUse = metric_value !== undefined ? metric_value : value;
+            const valueNum = parseFloat(valueToUse);
             if (isNaN(valueNum)) {
                 return res.status(400).json({ error: 'Value must be a number' });
             }
 
             const metric = await HealthMetric.add({
                 user_id,
-                metric_date,
+                metric_date: dateToUse,
                 metric_type: metric_type.trim(),
                 value: valueNum,
                 unit: unit || null,
@@ -33,7 +68,7 @@ const healthMetricController = {
 
             res.status(201).json({
                 message: 'Health metric added successfully',
-                metric
+                metric: convertMetricForFrontend(metric)
             });
         } catch (error) {
             console.error('Add health metric error:', error);
@@ -60,7 +95,7 @@ const healthMetricController = {
 
             res.json({
                 count: metrics.length,
-                metrics
+                metrics: convertMetricsForFrontend(metrics)
             });
         } catch (error) {
             console.error('Get health metrics error:', error);
@@ -116,7 +151,7 @@ const healthMetricController = {
                 return res.status(404).json({ error: 'Health metric not found' });
             }
 
-            res.json({ metric });
+            res.json({ metric: convertMetricForFrontend(metric) });
         } catch (error) {
             console.error('Get metric error:', error);
             res.status(500).json({ error: 'Failed to get health metric', details: error.message });
@@ -128,7 +163,18 @@ const healthMetricController = {
         try {
             const { id } = req.params;
             const user_id = req.user.user_id;
-            const updates = req.body;
+            let updates = req.body;
+
+            // Handle frontend field names (recorded_date, metric_value) by mapping them to backend field names
+            if (updates.recorded_date !== undefined) {
+                updates.metric_date = updates.recorded_date;
+                delete updates.recorded_date;
+            }
+
+            if (updates.metric_value !== undefined) {
+                updates.value = updates.metric_value;
+                delete updates.metric_value;
+            }
 
             // Validate date if provided
             if (updates.metric_date && !validateDate(updates.metric_date)) {
@@ -150,9 +196,14 @@ const healthMetricController = {
                 return res.status(404).json({ error: 'Health metric not found or no changes made' });
             }
 
+            // Get the updated metric to return with frontend field names
+            const metrics = await HealthMetric.getUserMetrics(user_id);
+            const updatedMetric = metrics.find(m => m.metric_id == id);
+
             res.json({
                 message: 'Health metric updated successfully',
                 metric_id: id,
+                metric: convertMetricForFrontend(updatedMetric),
                 updates
             });
         } catch (error) {
@@ -198,7 +249,7 @@ const healthMetricController = {
             res.json({
                 search_term: q,
                 count: metrics.length,
-                metrics
+                metrics: convertMetricsForFrontend(metrics)
             });
         } catch (error) {
             console.error('Search health metrics error:', error);
@@ -222,7 +273,7 @@ const healthMetricController = {
             res.json({
                 count: metrics.length,
                 limit: limitNum,
-                metrics
+                metrics: convertMetricsForFrontend(metrics)
             });
         } catch (error) {
             console.error('Get latest metrics error:', error);

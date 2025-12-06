@@ -10,25 +10,69 @@
         <div class="info-grid">
           <div class="info-item">
             <label>健康ID</label>
-            <p>{{ profile.health_id }}</p>
+            <div class="info-with-actions">
+              <p>{{ profile.health_id }}</p>
+              <span class="info-note">（不可修改）</span>
+            </div>
           </div>
           <div class="info-item">
             <label>姓名</label>
-            <p>{{ profile.name }}</p>
+            <div class="info-with-actions">
+              <p v-if="!editingName">{{ profile.name }}</p>
+              <input
+                v-else
+                v-model="editName"
+                type="text"
+                class="edit-input"
+                placeholder="输入姓名"
+              />
+              <button
+                v-if="!editingName"
+                @click="startEditName"
+                class="edit-btn"
+              >
+                编辑
+              </button>
+              <div v-else class="edit-actions">
+                <button @click="saveName" class="save-btn">保存</button>
+                <button @click="cancelEditName" class="cancel-btn">取消</button>
+              </div>
+            </div>
           </div>
           <div class="info-item">
             <label>电话</label>
-            <div class="info-with-badge">
-              <p>{{ profile.phone }}</p>
-              <span :class="['badge', profile.phone_verified ? 'verified' : 'unverified']">
-                {{ profile.phone_verified ? '已验证' : '未验证' }}
-              </span>
+            <div class="info-with-actions">
+              <div v-if="!editingPhone" class="phone-display">
+                <p>{{ profile.phone }}</p>
+                <span :class="['badge', profile.phone_verified ? 'verified' : 'unverified']">
+                  {{ profile.phone_verified ? '已验证' : '未验证' }}
+                </span>
+                <button
+                  v-if="!profile.phone_verified"
+                  @click="verifyPhone"
+                  class="verify-btn"
+                >
+                  验证
+                </button>
+              </div>
+              <div v-else class="phone-edit">
+                <input
+                  v-model="editPhone"
+                  type="tel"
+                  class="edit-input"
+                  placeholder="输入新电话号码"
+                />
+                <div class="edit-actions">
+                  <button @click="savePhone" class="save-btn">保存</button>
+                  <button @click="cancelEditPhone" class="cancel-btn">取消</button>
+                </div>
+              </div>
               <button
-                v-if="!profile.phone_verified"
-                @click="verifyPhone"
-                class="verify-btn"
+                v-if="!editingPhone"
+                @click="startEditPhone"
+                class="edit-btn"
               >
-                验证
+                编辑
               </button>
             </div>
           </div>
@@ -40,7 +84,7 @@
         <div class="emails-list">
           <div
             v-for="email in profile.emails || []"
-            :key="email.id"
+            :key="email.email_id || email.id"
             class="email-item"
           >
             <span>{{ email.email }}</span>
@@ -51,10 +95,17 @@
               <span v-if="email.is_primary" class="badge primary">主要</span>
               <button
                 v-if="!email.verified"
-                @click="verifyEmail(email.id)"
+                @click="verifyEmail(email.email_id || email.id)"
                 class="verify-btn"
               >
                 验证
+              </button>
+              <button
+                v-if="!email.is_primary"
+                @click="deleteEmail(email.email_id || email.id)"
+                class="delete-btn"
+              >
+                删除
               </button>
             </div>
           </div>
@@ -85,6 +136,12 @@ const loading = ref(true);
 const error = ref('');
 const success = ref('');
 const newEmail = ref('');
+
+// Edit states
+const editingName = ref(false);
+const editingPhone = ref(false);
+const editName = ref('');
+const editPhone = ref('');
 
 const loadProfile = async () => {
   try {
@@ -133,6 +190,83 @@ const verifyPhone = async () => {
     await loadProfile();
   } catch (err) {
     error.value = err.response?.data?.error || '验证失败';
+  }
+};
+
+// Name editing
+const startEditName = () => {
+  editingName.value = true;
+  editName.value = profile.value.name || '';
+};
+
+const cancelEditName = () => {
+  editingName.value = false;
+  editName.value = '';
+};
+
+const saveName = async () => {
+  if (!editName.value.trim()) {
+    error.value = '姓名不能为空';
+    return;
+  }
+
+  try {
+    error.value = '';
+    success.value = '';
+    await authService.updateProfile({ name: editName.value.trim() });
+    success.value = '姓名更新成功';
+    editingName.value = false;
+    editName.value = '';
+    await loadProfile();
+  } catch (err) {
+    error.value = err.response?.data?.error || '更新失败';
+  }
+};
+
+// Phone editing
+const startEditPhone = () => {
+  editingPhone.value = true;
+  editPhone.value = profile.value.phone || '';
+};
+
+const cancelEditPhone = () => {
+  editingPhone.value = false;
+  editPhone.value = '';
+};
+
+const savePhone = async () => {
+  if (!editPhone.value.trim()) {
+    error.value = '电话号码不能为空';
+    return;
+  }
+
+  try {
+    error.value = '';
+    success.value = '';
+    await authService.updatePhone(editPhone.value.trim());
+    success.value = '电话号码更新成功';
+    editingPhone.value = false;
+    editPhone.value = '';
+    await loadProfile();
+  } catch (err) {
+    error.value = err.response?.data?.error || '更新失败';
+  }
+};
+
+// Delete email
+const deleteEmail = async (emailId) => {
+  if (!confirm('确定要删除这个邮箱地址吗？')) {
+    return;
+  }
+
+  try {
+    error.value = '';
+    success.value = '';
+    await authService.deleteEmail(emailId);
+    success.value = '邮箱删除成功';
+    await loadProfile();
+  } catch (err) {
+    error.value = err.response?.data?.error || '删除失败';
   }
 };
 
@@ -313,6 +447,110 @@ h1 {
   background-color: #efe;
   color: #3c3;
   border-radius: 6px;
+}
+
+/* New styles for edit functionality */
+.info-with-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-note {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.phone-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.phone-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.edit-input {
+  padding: 0.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.edit-btn {
+  padding: 0.25rem 0.75rem;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.3s;
+}
+
+.edit-btn:hover {
+  background-color: #e9ecef;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-btn {
+  padding: 0.25rem 0.75rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.save-btn:hover {
+  opacity: 0.9;
+}
+
+.cancel-btn {
+  padding: 0.25rem 0.75rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.cancel-btn:hover {
+  opacity: 0.9;
+}
+
+.delete-btn {
+  padding: 0.25rem 0.75rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.delete-btn:hover {
+  opacity: 0.9;
 }
 </style>
 
