@@ -104,6 +104,20 @@
             <label>备注</label>
             <textarea v-model="currentMetric.notes" rows="3"></textarea>
           </div>
+          <div class="form-group" v-if="isAdmin && familyMembers.length > 0">
+            <label>为家庭成员添加（可选）</label>
+            <select v-model="currentMetric.target_user_id">
+              <option :value="null">为自己添加</option>
+              <option
+                v-for="member in familyMembers"
+                :key="member.user_id"
+                :value="member.user_id"
+              >
+                {{ member.name }} ({{ member.health_id }})
+              </option>
+            </select>
+            <p class="form-hint">作为家庭组管理员，您可以为其他成员添加健康指标</p>
+          </div>
           <div class="form-actions">
             <button type="button" @click="closeModal" class="cancel-btn">取消</button>
             <button type="submit" class="submit-btn">保存</button>
@@ -120,6 +134,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { healthMetricService } from '../services/healthMetrics';
+import { familyService } from '../services/family';
 
 const metrics = ref([]);
 const loading = ref(true);
@@ -132,6 +147,9 @@ const selectedYear = ref('');
 const selectedMonth = ref('');
 const monthlySummary = ref(null);
 const showMonthlySummary = ref(false);
+const familyGroups = ref([]);
+const familyMembers = ref([]);
+const isAdmin = ref(false);
 
 const currentMetric = ref({
   metric_type: '',
@@ -139,6 +157,7 @@ const currentMetric = ref({
   unit: '',
   recorded_date: '',
   notes: '',
+  target_user_id: null,  // For family group admins
 });
 
 const currentMetricId = ref(null);
@@ -167,6 +186,43 @@ const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN');
+};
+
+const loadFamilyGroups = async () => {
+  try {
+    const groups = await familyService.getAll();
+    familyGroups.value = groups;
+    
+    // Check if user is an admin in any family group
+    isAdmin.value = groups.some(g => g.can_manage);
+    
+    // Collect all family members from all groups where user is admin
+    const allMembers = [];
+    for (const group of groups) {
+      if (group.can_manage) {
+        try {
+          const members = await familyService.getMembers(group.family_id);
+          allMembers.push(...members);
+        } catch (err) {
+          console.error('Failed to load members for group', group.family_id, err);
+        }
+      }
+    }
+    
+    // Remove duplicates
+    const uniqueMembers = [];
+    const seenIds = new Set();
+    for (const member of allMembers) {
+      if (!seenIds.has(member.user_id)) {
+        seenIds.add(member.user_id);
+        uniqueMembers.push(member);
+      }
+    }
+    
+    familyMembers.value = uniqueMembers;
+  } catch (err) {
+    console.error('Failed to load family groups:', err);
+  }
 };
 
 const loadMetrics = async () => {
@@ -228,6 +284,7 @@ const closeModal = () => {
     unit: '',
     recorded_date: '',
     notes: '',
+    target_user_id: null,
   };
   currentMetricId.value = null;
 };
@@ -272,8 +329,8 @@ const deleteMetric = async (id) => {
   }
 };
 
-onMounted(() => {
-  loadMetrics();
+onMounted(async () => {
+  await Promise.all([loadMetrics(), loadFamilyGroups()]);
 });
 </script>
 

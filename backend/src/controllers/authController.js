@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Invitation = require('../models/Invitation');
 const { generateToken } = require('../middleware/auth');
 const { validateEmail, validatePhone, validateHealthId, validatePassword } = require('../utils/validators');
 
@@ -49,6 +50,47 @@ const authController = {
 
             // Create user
             const user = await User.create({ health_id, name, phone, password, email });
+
+            // Check for platform invitations matching this user's email or phone
+            // If found, mark them as accepted (even if expired, since user has now registered)
+            try {
+                const { pool } = require('../config/database');
+                
+                if (email) {
+                    const [emailInvitations] = await pool.execute(
+                        `SELECT * FROM invitations 
+                         WHERE email = ? AND invitation_type = 'platform' AND status = 'pending'`,
+                        [email]
+                    );
+                    for (const invitation of emailInvitations) {
+                        await pool.execute(
+                            `UPDATE invitations 
+                             SET status = 'accepted', completed_at = NOW() 
+                             WHERE invitation_id = ?`,
+                            [invitation.invitation_id]
+                        );
+                    }
+                }
+                
+                if (phone) {
+                    const [phoneInvitations] = await pool.execute(
+                        `SELECT * FROM invitations 
+                         WHERE phone = ? AND invitation_type = 'platform' AND status = 'pending'`,
+                        [phone]
+                    );
+                    for (const invitation of phoneInvitations) {
+                        await pool.execute(
+                            `UPDATE invitations 
+                             SET status = 'accepted', completed_at = NOW() 
+                             WHERE invitation_id = ?`,
+                            [invitation.invitation_id]
+                        );
+                    }
+                }
+            } catch (invitationError) {
+                // Log error but don't fail registration
+                console.error('Error processing platform invitations during registration:', invitationError);
+            }
 
             // Generate token
             const token = generateToken(user.id);

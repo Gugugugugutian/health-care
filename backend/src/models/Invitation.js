@@ -12,17 +12,17 @@ class Invitation {
         if (email) {
             const [emailRows] = await pool.execute(
                 `SELECT * FROM invitations
-                 WHERE email = ? AND invitation_type = ? AND related_id = ? AND status = 'pending'
+                 WHERE email = ? AND invitation_type = ? AND (related_id = ? OR (related_id IS NULL AND ? IS NULL)) AND status = 'pending'
                  AND expires_at > NOW()`,
-                [email, invitation_type, related_id]
+                [email, invitation_type, related_id || null, related_id || null]
             );
             existingInvitation = emailRows[0];
         } else if (phone) {
             const [phoneRows] = await pool.execute(
                 `SELECT * FROM invitations
-                 WHERE phone = ? AND invitation_type = ? AND related_id = ? AND status = 'pending'
+                 WHERE phone = ? AND invitation_type = ? AND (related_id = ? OR (related_id IS NULL AND ? IS NULL)) AND status = 'pending'
                  AND expires_at > NOW()`,
-                [phone, invitation_type, related_id]
+                [phone, invitation_type, related_id || null, related_id || null]
             );
             existingInvitation = phoneRows[0];
         }
@@ -34,7 +34,7 @@ class Invitation {
         const [result] = await pool.execute(
             `INSERT INTO invitations (invitation_uid, sent_by, email, phone, invitation_type, related_id, expires_at)
              VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 15 DAY))`,
-            [invitation_uid, sent_by, email, phone, invitation_type, related_id]
+            [invitation_uid, sent_by, email, phone, invitation_type, related_id || null]
         );
 
         return {
@@ -87,6 +87,7 @@ class Invitation {
                             CASE
                                 WHEN i.invitation_type = 'challenge' THEN wc.title
                                 WHEN i.invitation_type = 'family' THEN fg.group_name
+                                WHEN i.invitation_type = 'platform' THEN 'Platform Registration'
                                 ELSE 'Data Share'
                             END as related_name
                      FROM invitations i
@@ -151,6 +152,11 @@ class Invitation {
                         [invitation.related_id, userId]
                     );
                     result = familyResult.affectedRows > 0;
+                    break;
+
+                case 'platform':
+                    // Platform invitation - user has already registered, just mark as accepted
+                    result = true;
                     break;
 
                 case 'data_share':

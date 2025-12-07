@@ -32,7 +32,7 @@
       </div>
       <div
         v-for="appointment in appointments"
-        :key="appointment.id"
+        :key="appointment.appointment_id || appointment.id"
         class="appointment-card"
       >
         <div class="appointment-header">
@@ -52,12 +52,15 @@
         </div>
         <div class="appointment-actions">
           <button
-            v-if="appointment.status !== 'cancelled' && canCancel(appointment)"
-            @click="cancelAppointment(appointment.id)"
+            v-if="appointment.status === 'scheduled' && canCancel(appointment)"
+            @click="cancelAppointment(appointment.appointment_id || appointment.id)"
             class="cancel-btn"
           >
             取消预约
           </button>
+          <span v-else-if="appointment.status === 'scheduled' && !canCancel(appointment)" class="cancel-hint">
+            距离预约时间不足24小时，无法取消
+          </span>
         </div>
       </div>
     </div>
@@ -153,11 +156,77 @@ const formatDate = (dateString) => {
 };
 
 const canCancel = (appointment) => {
-  if (appointment.status === 'cancelled') return false;
-  const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
-  const now = new Date();
-  const hoursUntilAppointment = (appointmentDateTime - now) / (1000 * 60 * 60);
-  return hoursUntilAppointment >= 24;
+  if (appointment.status === 'cancelled' || appointment.status === 'completed') return false;
+  if (!appointment.appointment_date || !appointment.appointment_time) return false;
+  
+  try {
+    let dateStr;
+    let hourStr;
+    let timeStr = appointment.appointment_time; // Format: "HH:mm:ss" or "mm:ss"
+    
+    // Extract date and hour from appointment_date
+    if (appointment.appointment_date.includes('T')) {
+      // If it's a datetime string like "2025-12-09T16:00:00.000Z"
+      const parts = appointment.appointment_date.split('T');
+      dateStr = parts[0]; // "2025-12-09"
+      
+      // Extract hour from time part (before the first colon or dot)
+      const timePart = parts[1]; // "16:00:00.000Z" or "16:00:00"
+      hourStr = timePart.split(':')[0]; // "16"
+    } else {
+      // If it's just a date string, we can't get the hour
+      console.error('appointment_date does not contain time information');
+      return false;
+    }
+    
+    // Extract minutes and seconds from appointment_time
+    // appointment_time format: "00:34:00" or "34:00"
+    const timeParts = timeStr.split(':');
+    let minuteStr, secondStr;
+    
+    if (timeParts.length >= 2) {
+      // If format is "HH:mm:ss" or "mm:ss"
+      if (timeParts.length === 3) {
+        // Format: "00:34:00" - first is hour (ignore), second is minute, third is second
+        minuteStr = timeParts[1]; // "34"
+        secondStr = timeParts[2]; // "00"
+      } else if (timeParts.length === 2) {
+        // Format: "34:00" - first is minute, second is second
+        minuteStr = timeParts[0]; // "34"
+        secondStr = timeParts[1]; // "00"
+      }
+    } else {
+      console.error('Invalid appointment_time format:', timeStr);
+      return false;
+    }
+    
+    // Combine: date from appointment_date, hour from appointment_date, minutes/seconds from appointment_time
+    const combinedTimeStr = `${hourStr}:${minuteStr}:${secondStr}`;
+    const appointmentDateTime = new Date(`${dateStr}T${combinedTimeStr}`);
+    
+    // Check if date is valid
+    if (isNaN(appointmentDateTime.getTime())) {
+      console.error('Invalid appointment date:', dateStr, combinedTimeStr);
+      return false;
+    }
+    
+    const now = new Date();
+    const hoursUntilAppointment = (appointmentDateTime - now) / (1000 * 60 * 60);
+    
+    // Debug log (can be removed later)
+    console.log('Appointment date (from appointment_date):', dateStr);
+    console.log('Appointment hour (from appointment_date):', hourStr);
+    console.log('Appointment minutes/seconds (from appointment_time):', minuteStr + ':' + secondStr);
+    console.log('Combined appointment datetime:', appointmentDateTime);
+    console.log('Current datetime:', now);
+    console.log('Hours until appointment:', hoursUntilAppointment.toFixed(2));
+    console.log('Can cancel (>= 24 hours):', hoursUntilAppointment >= 24);
+    
+    return hoursUntilAppointment >= 24;
+  } catch (error) {
+    console.error('Error calculating cancel eligibility:', error, appointment);
+    return false;
+  }
 };
 
 const loadAppointments = async () => {
@@ -222,13 +291,20 @@ const createAppointment = async () => {
 };
 
 const cancelAppointment = async (id) => {
+  if (!id) {
+    error.value = '预约ID无效';
+    return;
+  }
+  
   const reason = prompt('请输入取消原因:');
-  if (!reason) return;
+  if (!reason || reason.trim() === '') {
+    return;
+  }
 
   try {
     error.value = '';
     success.value = '';
-    await appointmentService.cancel(id, reason);
+    await appointmentService.cancel(id, reason.trim());
     success.value = '预约已取消';
     await loadAppointments();
   } catch (err) {
@@ -387,6 +463,14 @@ h1 {
 
 .cancel-btn:hover {
   opacity: 0.9;
+}
+
+.cancel-hint {
+  color: #856404;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  background-color: #fff3cd;
+  border-radius: 6px;
 }
 
 .modal-overlay {

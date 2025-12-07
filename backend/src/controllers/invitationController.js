@@ -136,25 +136,32 @@ const invitationController = {
             let finalEmail = email;
             let finalPhone = phone;
 
-            // If recipient_health_id is provided, find user and get their email
-            if (recipient_health_id && !email && !phone) {
-                const user = await Invitation.findUserByHealthId(recipient_health_id);
-                if (!user) {
-                    return res.status(404).json({ error: 'User not found with the provided health ID' });
+            // For platform invitations, email or phone is required (no need for recipient_health_id)
+            if (invitation_type === 'platform') {
+                if (!email && !phone) {
+                    return res.status(400).json({ error: 'Email or phone is required for platform invitations' });
                 }
-                const userEmail = await Invitation.getUserPrimaryEmail(user.user_id);
-                if (!userEmail) {
-                    return res.status(400).json({ error: 'User does not have a verified email for invitation' });
+            } else {
+                // For other invitation types, check for recipient_health_id
+                if (recipient_health_id && !email && !phone) {
+                    const user = await Invitation.findUserByHealthId(recipient_health_id);
+                    if (!user) {
+                        return res.status(404).json({ error: 'User not found with the provided health ID' });
+                    }
+                    const userEmail = await Invitation.getUserPrimaryEmail(user.user_id);
+                    if (!userEmail) {
+                        return res.status(400).json({ error: 'User does not have a verified email for invitation' });
+                    }
+                    finalEmail = userEmail;
+                } else if (!email && !phone) {
+                    return res.status(400).json({ error: 'Email, phone, or recipient health ID is required' });
                 }
-                finalEmail = userEmail;
-            } else if (!email && !phone) {
-                return res.status(400).json({ error: 'Email, phone, or recipient health ID is required' });
             }
 
             let finalRelatedId = related_id;
 
             // If challenge_name is provided, find the challenge ID
-            if (challenge_name && !related_id) {
+            if (challenge_name && !related_id && invitation_type === 'challenge') {
                 const challenge = await Invitation.findChallengeByName(challenge_name, sent_by);
                 if (!challenge) {
                     return res.status(404).json({ error: 'Challenge not found with the provided name' });
@@ -163,7 +170,7 @@ const invitationController = {
             }
 
             // If family_group_identifier is provided, find the family group ID
-            if (family_group_identifier && !related_id) {
+            if (family_group_identifier && !related_id && invitation_type === 'family') {
                 // Try to find by group name first
                 const familyGroup = await Invitation.findFamilyGroupByIdentifier(family_group_identifier, sent_by);
                 if (!familyGroup) {
@@ -172,18 +179,19 @@ const invitationController = {
                 finalRelatedId = familyGroup.family_id;
             }
 
-            if (!finalRelatedId) {
+            // Platform invitations don't require related_id
+            if (invitation_type !== 'platform' && !finalRelatedId) {
                 return res.status(400).json({ error: 'Related ID or identifier is required' });
             }
 
-            // TODO: Validate that finalRelatedId exists and user has permission to invite
+            // TODO: Validate that finalRelatedId exists and user has permission to invite (for non-platform invitations)
 
             const invitation = await Invitation.create({
                 sent_by,
                 email: finalEmail || null,
                 phone: finalPhone || null,
                 invitation_type,
-                related_id: finalRelatedId
+                related_id: finalRelatedId || null
             });
 
             res.status(201).json({

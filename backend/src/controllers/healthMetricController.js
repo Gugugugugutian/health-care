@@ -1,4 +1,5 @@
 const HealthMetric = require('../models/HealthMetric');
+const FamilyGroup = require('../models/FamilyGroup');
 const { validateDate } = require('../utils/validators');
 
 // Helper function to convert backend field names to frontend field names
@@ -35,9 +36,38 @@ const healthMetricController = {
                 value,
                 metric_value,
                 unit,
-                notes
+                notes,
+                target_user_id  // For family group admins to add metrics for other members
             } = req.body;
-            const user_id = req.user.user_id;
+            let user_id = req.user.user_id;
+
+            // If target_user_id is provided, check if current user is a family group admin
+            if (target_user_id && target_user_id !== user_id) {
+                // Get all family groups where current user is a member
+                const userFamilyGroups = await FamilyGroup.getUserFamilyGroups(user_id);
+                
+                // Check if target user is in any of these family groups and current user is an admin
+                let canManage = false;
+                for (const group of userFamilyGroups) {
+                    if (group.can_manage) {
+                        const members = await FamilyGroup.getMembers(group.family_id);
+                        const targetMember = members.find(m => m.user_id == target_user_id);
+                        if (targetMember) {
+                            canManage = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!canManage) {
+                    return res.status(403).json({ 
+                        error: 'Permission denied',
+                        details: 'You can only add health metrics for family group members if you are a group administrator'
+                    });
+                }
+
+                user_id = target_user_id;
+            }
 
             // Validate inputs
             if (!metric_type || metric_type.trim().length < 2) {

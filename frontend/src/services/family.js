@@ -60,5 +60,11 @@ export const familyService = {
     const response = await api.delete(`/family/${id}`);
     return response.data;
   },
+
+  // Get family group members
+  getMembers: async (familyId) => {
+    const response = await api.get(`/family/${familyId}/members`);
+    return response.data.members || [];
+  },
 };
 

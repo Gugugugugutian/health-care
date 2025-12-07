@@ -1,5 +1,6 @@
 const Appointment = require('../models/Appointment');
 const Provider = require('../models/Provider');
+const User = require('../models/User');
 const { validateDate, validateTime, validateConsultationType } = require('../utils/validators');
 
 const appointmentController = {
@@ -8,6 +9,22 @@ const appointmentController = {
         try {
             const { provider_id, license_number, email, appointment_date, appointment_time, consultation_type, memo } = req.body;
             const userId = req.user.user_id;
+
+            // Check if user has verified contact information (phone or email)
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            const hasVerifiedPhone = user.phone_verified;
+            const hasVerifiedEmail = user.emails && user.emails.some(e => e.verified);
+
+            if (!hasVerifiedPhone && !hasVerifiedEmail) {
+                return res.status(400).json({ 
+                    error: 'Cannot create appointment without verified contact information',
+                    details: 'Please verify your phone number or email address before creating an appointment'
+                });
+            }
 
             // Validate inputs
             if (!validateDate(appointment_date)) {

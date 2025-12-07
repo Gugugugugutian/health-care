@@ -51,12 +51,6 @@
                 更新进度
               </button>
               <button
-                @click="showInviteModal(challenge)"
-                class="invite-btn"
-              >
-                邀请
-              </button>
-              <button
                 v-if="challenge.user_role === 'creator'"
                 @click="deleteChallenge(challenge.challenge_id)"
                 class="delete-btn"
@@ -161,27 +155,6 @@
       </div>
     </div>
 
-    <!-- Invite Modal -->
-    <div v-if="showInviteModalVisible" class="modal-overlay" @click="showInviteModalVisible = false">
-      <div class="modal-content" @click.stop>
-        <h2>邀请参与挑战</h2>
-        <form @submit.prevent="sendInvites">
-          <div class="form-group">
-            <label>邀请列表（每行一个邮箱或电话）*</label>
-            <textarea
-              v-model="inviteList"
-              rows="5"
-              required
-              placeholder="email@example.com&#10;+1234567890"
-            ></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="showInviteModalVisible = false" class="cancel-btn">取消</button>
-            <button type="submit" class="submit-btn">发送邀请</button>
-          </div>
-        </form>
-      </div>
-    </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
     <div v-if="success" class="success-message">{{ success }}</div>
@@ -200,10 +173,8 @@ const success = ref('');
 const searchQuery = ref('');
 const showAddModal = ref(false);
 const showProgressModalVisible = ref(false);
-const showInviteModalVisible = ref(false);
 const currentChallengeId = ref(null);
 const progressValue = ref(0);
-const inviteList = ref('');
 
 const newChallenge = ref({
   title: '',
@@ -286,53 +257,6 @@ const updateProgress = async () => {
   }
 };
 
-const showInviteModal = (challenge) => {
-  currentChallengeId.value = challenge.challenge_id;
-  inviteList.value = '';
-  showInviteModalVisible.value = true;
-};
-
-const sendInvites = async () => {
-  const invites = inviteList.value.split('\n').filter(line => line.trim());
-  
-  if (invites.length === 0) {
-    error.value = '请输入至少一个邮箱或电话';
-    return;
-  }
-
-  try {
-    error.value = '';
-    success.value = '';
-    
-    // Send invites one by one (backend API only accepts single email or phone)
-    const results = [];
-    for (const invite of invites) {
-      const isEmail = invite.includes('@');
-      const inviteData = isEmail ? { email: invite } : { phone: invite };
-      try {
-        await challengeService.invite(currentChallengeId.value, inviteData);
-        results.push({ invite, success: true });
-      } catch (err) {
-        results.push({ invite, success: false, error: err.response?.data?.error });
-      }
-    }
-    
-    const successCount = results.filter(r => r.success).length;
-    if (successCount === invites.length) {
-      success.value = `所有邀请发送成功 (${successCount}/${invites.length})`;
-    } else {
-      success.value = `部分邀请发送成功 (${successCount}/${invites.length})`;
-      const failed = results.filter(r => !r.success).map(r => r.invite).join(', ');
-      error.value = `以下邀请发送失败: ${failed}`;
-    }
-    
-    showInviteModalVisible.value = false;
-    inviteList.value = '';
-    await loadChallenges();
-  } catch (err) {
-    error.value = err.response?.data?.error || '发送邀请失败';
-  }
-};
 
 const joinChallenge = async (id) => {
   try {
@@ -519,7 +443,6 @@ h1 {
 }
 
 .update-btn,
-.invite-btn,
 .join-btn,
 .delete-btn,
 .leave-btn {
@@ -533,11 +456,6 @@ h1 {
 
 .update-btn {
   background-color: #667eea;
-  color: white;
-}
-
-.invite-btn {
-  background-color: #764ba2;
   color: white;
 }
 
@@ -557,7 +475,6 @@ h1 {
 }
 
 .update-btn:hover,
-.invite-btn:hover,
 .join-btn:hover,
 .delete-btn:hover,
 .leave-btn:hover {

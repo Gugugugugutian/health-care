@@ -45,13 +45,13 @@ class Provider {
         try {
             console.log(`linkToUser: Starting for user ${userId}, provider ${providerId}, isPrimary: ${isPrimary}`);
 
-            // Check if already linked
+            // Check if already linked (active)
             const [existing] = await pool.execute(
                 'SELECT user_provider_id FROM user_providers WHERE user_id = ? AND provider_id = ? AND unlinked_at IS NULL',
                 [userId, providerId]
             );
 
-            console.log(`linkToUser: Existing links found: ${existing.length}`);
+            console.log(`linkToUser: Existing active links found: ${existing.length}`);
 
             if (existing.length > 0) {
                 console.log(`linkToUser: Provider already linked, user_provider_id: ${existing[0].user_provider_id}`);
@@ -60,7 +60,7 @@ class Provider {
                     console.log(`linkToUser: Setting as primary, updating other providers...`);
                     // First, set all other providers as non-primary
                     const [updateOthersResult] = await pool.execute(
-                        'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ?',
+                        'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ? AND unlinked_at IS NULL',
                         [userId]
                     );
                     console.log(`linkToUser: Updated ${updateOthersResult.affectedRows} other providers to non-primary`);
@@ -75,12 +75,38 @@ class Provider {
                 return existing[0].user_provider_id;
             }
 
+            // Check if there's an unlinked record (deleted previously)
+            const [unlinked] = await pool.execute(
+                'SELECT user_provider_id FROM user_providers WHERE user_id = ? AND provider_id = ? AND unlinked_at IS NOT NULL',
+                [userId, providerId]
+            );
+
+            if (unlinked.length > 0) {
+                console.log(`linkToUser: Found unlinked record, reactivating...`);
+                // Reactivate the unlinked record
+                if (isPrimary) {
+                    // First, set all other providers as non-primary
+                    await pool.execute(
+                        'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ? AND unlinked_at IS NULL',
+                        [userId]
+                    );
+                }
+
+                // Reactivate by setting unlinked_at to NULL and updating linked_at
+                const [updateResult] = await pool.execute(
+                    'UPDATE user_providers SET unlinked_at = NULL, linked_at = CURRENT_TIMESTAMP, is_primary = ? WHERE user_provider_id = ?',
+                    [isPrimary, unlinked[0].user_provider_id]
+                );
+                console.log(`linkToUser: Reactivated link, affected rows: ${updateResult.affectedRows}`);
+                return unlinked[0].user_provider_id;
+            }
+
             console.log(`linkToUser: Provider not linked, creating new link...`);
             // If setting as primary, update existing primary providers
             if (isPrimary) {
                 console.log(`linkToUser: Setting as primary, updating existing primary providers...`);
                 const [updateResult] = await pool.execute(
-                    'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ?',
+                    'UPDATE user_providers SET is_primary = FALSE WHERE user_id = ? AND unlinked_at IS NULL',
                     [userId]
                 );
                 console.log(`linkToUser: Updated ${updateResult.affectedRows} existing primary providers`);

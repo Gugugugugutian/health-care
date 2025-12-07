@@ -42,7 +42,7 @@ const validateConsultationType = (type) => {
 };
 
 const validateInvitationType = (type) => {
-    return ['challenge', 'family'].includes(type);
+    return ['challenge', 'family', 'platform'].includes(type);
 };
 
 module.exports = {

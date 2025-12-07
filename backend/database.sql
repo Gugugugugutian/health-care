@@ -129,7 +129,7 @@ CREATE TABLE invitations (
     sent_by INT NOT NULL,
     email VARCHAR(100),
     phone VARCHAR(20),
-    invitation_type ENUM('challenge', 'family', 'data_share') NOT NULL,
+    invitation_type ENUM('challenge', 'family', 'data_share', 'platform') NOT NULL,
     related_id INT, -- challenge_id or family_id
     status ENUM('pending', 'accepted', 'expired', 'cancelled') DEFAULT 'pending',
     initiated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -67,18 +67,25 @@
                 {{ provider.verified ? '已验证' : '未验证' }}
               </span>
               <button
-                v-if="!isMyProvider(provider.provider_id)"
+                v-if="!isMyProvider(provider.provider_id) && provider.verified"
                 @click="linkProvider(provider.provider_id)"
                 class="link-btn"
               >
                 关联
               </button>
               <button
-                v-if="!isMyProvider(provider.provider_id)"
+                v-if="!isMyProvider(provider.provider_id) && provider.verified"
                 @click="linkProvider(provider.provider_id, true)"
                 class="link-primary-btn"
               >
                 设为主要
+              </button>
+              <button
+                v-if="!isMyProvider(provider.provider_id) && !provider.verified"
+                @click="verifyProvider(provider.provider_id)"
+                class="verify-btn"
+              >
+                验证
               </button>
             </div>
           </div>
@@ -215,6 +222,18 @@ const addProvider = async () => {
     await loadProviders();
   } catch (err) {
     error.value = err.response?.data?.error || '添加失败';
+  }
+};
+
+const verifyProvider = async (providerId) => {
+  try {
+    error.value = '';
+    success.value = '';
+    await providerService.verify(providerId);
+    success.value = '提供者验证成功';
+    await loadProviders();
+  } catch (err) {
+    error.value = err.response?.data?.error || '验证失败';
   }
 };
 
@@ -361,7 +380,8 @@ h1 {
 
 .link-btn,
 .link-primary-btn,
-.unlink-btn {
+.unlink-btn,
+.verify-btn {
   padding: 0.25rem 0.75rem;
   border: none;
   border-radius: 6px;
@@ -385,9 +405,15 @@ h1 {
   color: white;
 }
 
+.verify-btn {
+  background-color: #ffc107;
+  color: #333;
+}
+
 .link-btn:hover,
 .link-primary-btn:hover,
-.unlink-btn:hover {
+.unlink-btn:hover,
+.verify-btn:hover {
   opacity: 0.9;
 }
 

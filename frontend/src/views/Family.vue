@@ -49,12 +49,6 @@
             </div>
             <div class="member-actions">
               <button
-                @click.stop="showAddMemberModal(group.family_id)"
-                class="add-member-btn"
-              >
-                添加成员
-              </button>
-              <button
                 @click.stop="showInviteModal(group.family_id)"
                 class="invite-btn"
               >
@@ -78,29 +72,6 @@
           <div class="form-actions">
             <button type="button" @click="showAddModal = false" class="cancel-btn">取消</button>
             <button type="submit" class="submit-btn">创建</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Add Member Modal -->
-    <div v-if="showAddMemberModalVisible" class="modal-overlay" @click="showAddMemberModalVisible = false">
-      <div class="modal-content" @click.stop>
-        <h2>添加成员</h2>
-        <form @submit.prevent="addMember">
-          <div class="form-group">
-            <label>用户健康ID (Health ID) *</label>
-            <input v-model="newMember.health_id" type="text" required placeholder="例如：HT001、HT002" />
-            <p class="form-hint">需要添加用户的健康ID（包含字母和数字）。用户可以在个人资料页面查看自己的健康ID。</p>
-          </div>
-          <div class="form-group">
-            <label>关系</label>
-            <input v-model="newMember.relationship" type="text" placeholder="例如：父亲、母亲、孩子" />
-            <p class="form-hint">可选，用于标识家庭成员关系</p>
-          </div>
-          <div class="form-actions">
-            <button type="button" @click="showAddMemberModalVisible = false" class="cancel-btn">取消</button>
-            <button type="submit" class="submit-btn">添加</button>
           </div>
         </form>
       </div>
@@ -138,18 +109,12 @@ const loading = ref(true);
 const error = ref('');
 const success = ref('');
 const showAddModal = ref(false);
-const showAddMemberModalVisible = ref(false);
 const showInviteModalVisible = ref(false);
 const currentFamilyId = ref(null);
 const inviteUserId = ref('');
 
 const newFamilyGroup = ref({
   group_name: '',
-});
-
-const newMember = ref({
-  health_id: '',
-  relationship: '',
 });
 
 const loadFamilyGroups = async () => {
@@ -195,25 +160,6 @@ const createFamilyGroup = async () => {
     await loadFamilyGroups();
   } catch (err) {
     error.value = err.response?.data?.error || '创建家庭组失败';
-  }
-};
-
-const showAddMemberModal = (familyId) => {
-  currentFamilyId.value = familyId;
-  newMember.value = { health_id: '', relationship: '' };
-  showAddMemberModalVisible.value = true;
-};
-
-const addMember = async () => {
-  try {
-    error.value = '';
-    success.value = '';
-    await familyService.addMember(currentFamilyId.value, newMember.value);
-    success.value = '成员添加成功';
-    showAddMemberModalVisible.value = false;
-    await loadFamilyGroups();
-  } catch (err) {
-    error.value = err.response?.data?.error || '添加成员失败';
   }
 };
 
@@ -412,7 +358,6 @@ h1 {
   margin-top: 1rem;
 }
 
-.add-member-btn,
 .invite-btn {
   flex: 1;
   padding: 0.5rem 1rem;
@@ -421,19 +366,10 @@ h1 {
   font-size: 0.9rem;
   cursor: pointer;
   transition: opacity 0.3s;
-}
-
-.add-member-btn {
-  background-color: #667eea;
-  color: white;
-}
-
-.invite-btn {
   background-color: #764ba2;
   color: white;
 }
 
-.add-member-btn:hover,
 .invite-btn:hover {
   opacity: 0.9;
 }

@@ -29,7 +29,7 @@
       <div v-else class="invitations-list">
         <div
           v-for="invitation in currentInvitations"
-          :key="invitation.id"
+          :key="invitation.invitation_id || invitation.id"
           class="invitation-card"
         >
           <div class="invitation-header">
@@ -40,26 +40,31 @@
           </div>
           <div class="invitation-details">
             <p><strong>收件人:</strong> {{ invitation.email || invitation.phone || '未知' }}</p>
-            <p><strong>发送时间:</strong> {{ formatDate(invitation.created_at) }}</p>
-            <p v-if="invitation.completed_at">
-              <strong>{{ invitation.status === 'accepted' ? '接受时间' : '过期时间' }}:</strong>
-              {{ formatDate(invitation.completed_at) }}
+            <p><strong>发送时间:</strong> {{ formatDate(invitation.initiated_at || invitation.created_at) }}</p>
+            <p v-if="invitation.status === 'cancelled' && invitation.completed_at">
+              <strong>取消时间:</strong> {{ formatDate(invitation.completed_at) }}
             </p>
-            <p v-if="invitation.expires_at">
+            <p v-else-if="invitation.status === 'accepted' && invitation.completed_at">
+              <strong>接受时间:</strong> {{ formatDate(invitation.completed_at) }}
+            </p>
+            <p v-else-if="invitation.status === 'expired' && invitation.completed_at">
+              <strong>过期时间:</strong> {{ formatDate(invitation.completed_at) }}
+            </p>
+            <p v-if="invitation.status === 'pending' && invitation.expires_at">
               <strong>过期时间:</strong> {{ formatDate(invitation.expires_at) }}
             </p>
           </div>
           <div class="invitation-actions">
             <button
               v-if="activeTab === 'received' && invitation.status === 'pending'"
-              @click="acceptInvitation(invitation.uid)"
+              @click="acceptInvitation(invitation.invitation_uid || invitation.uid)"
               class="accept-btn"
             >
               接受
             </button>
             <button
               v-if="activeTab === 'sent' && invitation.status === 'pending'"
-              @click="cancelInvitation(invitation.id)"
+              @click="cancelInvitation(invitation.invitation_id || invitation.id)"
               class="cancel-btn"
             >
               取消
@@ -76,25 +81,36 @@
         <form @submit.prevent="sendInvitation">
           <div class="form-group">
             <label>邀请类型 *</label>
-            <select v-model="newInvitation.invitation_type" required>
+            <select v-model="newInvitation.invitation_type" required @change="onInvitationTypeChange">
               <option value="">选择类型</option>
+              <option value="platform">平台注册邀请（未注册用户）</option>
               <option value="challenge">健康挑战</option>
               <option value="family">家庭组</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group" v-if="newInvitation.invitation_type === 'platform'">
+            <label>邮箱或手机号 *</label>
+            <input
+              v-model="newInvitation.contact"
+              type="text"
+              required
+              placeholder="例如：user@example.com 或 +1234567890"
+            />
+            <p class="form-hint">要邀请的未注册用户的邮箱或手机号</p>
+          </div>
+          <div class="form-group" v-if="newInvitation.invitation_type !== 'platform'">
             <label>用户健康ID (Health ID) *</label>
             <input
               v-model="newInvitation.recipient_health_id"
               type="text"
-              required
+              :required="newInvitation.invitation_type !== 'platform'"
               placeholder="例如：HT001、HT002"
             />
             <p class="form-hint">要邀请的用户的健康ID（包含字母和数字）</p>
           </div>
           <div class="form-group" v-if="newInvitation.invitation_type === 'challenge'">
             <label>挑战名称 *</label>
-            <input v-model="newInvitation.challenge_name" type="text" required placeholder="例如：December Fitness Challenge" />
+            <input v-model="newInvitation.challenge_name" type="text" :required="newInvitation.invitation_type === 'challenge'" placeholder="例如：December Fitness Challenge" />
             <p class="form-hint">要邀请的挑战的名称</p>
           </div>
           <div class="form-group" v-if="newInvitation.invitation_type === 'family'">
@@ -132,6 +148,7 @@ const newInvitation = ref({
   recipient_health_id: '',
   challenge_name: '',
   family_group_identifier: '',
+  contact: '',
 });
 
 const currentInvitations = computed(() => {
@@ -152,6 +169,7 @@ const formatDate = (dateString) => {
 
 const getInvitationType = (invitation) => {
   const types = {
+    platform: '平台注册邀请',
     challenge: '健康挑战邀请',
     family: '家庭组邀请',
   };
@@ -190,18 +208,39 @@ const loadInvitations = async () => {
   }
 };
 
+const onInvitationTypeChange = () => {
+  // Reset form when type changes
+  if (newInvitation.value.invitation_type === 'platform') {
+    newInvitation.value.recipient_health_id = '';
+    newInvitation.value.challenge_name = '';
+    newInvitation.value.family_group_identifier = '';
+  }
+};
+
 const sendInvitation = async () => {
   const invitationData = {
     invitation_type: newInvitation.value.invitation_type,
-    recipient_health_id: newInvitation.value.recipient_health_id,
   };
 
-  if (newInvitation.value.challenge_name) {
-    invitationData.challenge_name = newInvitation.value.challenge_name;
-  }
+  if (newInvitation.value.invitation_type === 'platform') {
+    // Platform invitation - use email or phone
+    const contact = newInvitation.value.contact.trim();
+    if (contact.includes('@')) {
+      invitationData.email = contact;
+    } else {
+      invitationData.phone = contact;
+    }
+  } else {
+    // Other invitation types
+    invitationData.recipient_health_id = newInvitation.value.recipient_health_id;
+    
+    if (newInvitation.value.challenge_name) {
+      invitationData.challenge_name = newInvitation.value.challenge_name;
+    }
 
-  if (newInvitation.value.family_group_identifier) {
-    invitationData.family_group_identifier = newInvitation.value.family_group_identifier;
+    if (newInvitation.value.family_group_identifier) {
+      invitationData.family_group_identifier = newInvitation.value.family_group_identifier;
+    }
   }
 
   try {
@@ -215,6 +254,7 @@ const sendInvitation = async () => {
       recipient_health_id: '',
       challenge_name: '',
       family_group_identifier: '',
+      contact: '',
     };
     await loadInvitations();
   } catch (err) {

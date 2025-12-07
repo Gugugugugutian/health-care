@@ -124,6 +124,11 @@ const providerController = {
                 return res.status(404).json({ error: 'Provider not found' });
             }
 
+            // Check if provider is verified
+            if (!provider.verified) {
+                return res.status(400).json({ error: 'Cannot link unverified provider. Please verify the provider first.' });
+            }
+
             console.log('linkProvider: Calling linkToUser with:', { userId, providerId: providerIdNum, isPrimary: is_primary || false });
 
             const linkId = await Provider.linkToUser(userId, providerIdNum, is_primary || false);
