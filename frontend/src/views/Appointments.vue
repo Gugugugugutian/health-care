@@ -6,21 +6,76 @@
     </div>
 
     <div class="filters-section">
-      <div class="date-filters">
-        <input
-          v-model="startDate"
-          type="date"
-          class="date-input"
-          placeholder="开始日期"
-        />
-        <input
-          v-model="endDate"
-          type="date"
-          class="date-input"
-          placeholder="结束日期"
-        />
-        <button @click="searchByDate" class="filter-btn">搜索</button>
-        <button @click="clearFilters" class="filter-btn">清除</button>
+      <div class="search-filters">
+        <div class="filter-group">
+          <label>医生:</label>
+          <select v-model="selectedProvider" class="filter-select">
+            <option value="all">所有医生</option>
+            <option
+              v-for="provider in availableProviders"
+              :key="provider.provider_id"
+              :value="provider.provider_id"
+            >
+              {{ provider.name }} - {{ provider.specialty }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>预约类型:</label>
+          <select v-model="selectedConsultationType" class="filter-select">
+            <option value="all">所有类型</option>
+            <option value="In-Person">面对面</option>
+            <option value="Virtual">虚拟</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>开始日期:</label>
+          <input
+            v-model="startDate"
+            type="date"
+            class="filter-input"
+            placeholder="开始日期"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label>结束日期:</label>
+          <input
+            v-model="endDate"
+            type="date"
+            class="filter-input"
+            placeholder="结束日期"
+          />
+        </div>
+
+        <div class="filter-actions">
+          <button @click="searchAppointments" class="filter-btn">搜索</button>
+          <button @click="clearFilters" class="filter-btn">清除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Display -->
+    <div v-if="searchStats.count > 0 || searchStats.totalInDateRange !== null" class="statistics-section">
+      <div class="stats-card">
+        <h3>搜索统计</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">匹配结果:</span>
+            <span class="stat-value">{{ searchStats.count }}</span>
+          </div>
+          <div v-if="searchStats.totalInDateRange !== null && (startDate || endDate)" class="stat-item">
+            <span class="stat-label">日期范围内总数:</span>
+            <span class="stat-value">{{ searchStats.totalInDateRange }}</span>
+            <div class="stat-note">
+              <span v-if="startDate && endDate">{{ startDate }} 至 {{ endDate }}</span>
+              <span v-else-if="startDate">{{ startDate }} 之后</span>
+              <span v-else-if="endDate">{{ endDate }} 之前</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -138,8 +193,14 @@ const loading = ref(true);
 const error = ref('');
 const success = ref('');
 const showAddModal = ref(false);
+const selectedProvider = ref('all');
+const selectedConsultationType = ref('all');
 const startDate = ref('');
 const endDate = ref('');
+const searchStats = ref({
+  count: 0,
+  totalInDateRange: null
+});
 
 const newAppointment = ref({
   provider_id: '',
@@ -233,6 +294,10 @@ const loadAppointments = async () => {
   try {
     loading.value = true;
     appointments.value = await appointmentService.getAll();
+    searchStats.value = {
+      count: appointments.value.length,
+      totalInDateRange: null
+    };
   } catch (err) {
     error.value = err.response?.data?.error || '加载预约失败';
   } finally {
@@ -248,15 +313,47 @@ const loadProviders = async () => {
   }
 };
 
-const searchByDate = async () => {
-  if (!startDate.value || !endDate.value) {
-    error.value = '请选择开始和结束日期';
-    return;
-  }
-
+const searchAppointments = async () => {
   try {
     loading.value = true;
-    appointments.value = await appointmentService.searchByDate(startDate.value, endDate.value);
+
+    // Build filters object
+    const filters = {};
+
+    if (selectedProvider.value && selectedProvider.value !== 'all') {
+      filters.provider_id = selectedProvider.value;
+    }
+
+    if (selectedConsultationType.value && selectedConsultationType.value !== 'all') {
+      filters.consultation_type = selectedConsultationType.value;
+    }
+
+    if (startDate.value) {
+      filters.start_date = startDate.value;
+    }
+
+    if (endDate.value) {
+      filters.end_date = endDate.value;
+    }
+
+    // Validate date range if both dates are provided
+    if (startDate.value && endDate.value) {
+      const start = new Date(startDate.value);
+      const end = new Date(endDate.value);
+      if (start > end) {
+        error.value = '开始日期不能晚于结束日期';
+        loading.value = false;
+        return;
+      }
+    }
+
+    const result = await appointmentService.search(filters);
+    appointments.value = result.appointments;
+    searchStats.value = {
+      count: result.count,
+      totalInDateRange: result.totalInDateRange
+    };
+    error.value = '';
   } catch (err) {
     error.value = err.response?.data?.error || '搜索失败';
   } finally {
@@ -265,8 +362,14 @@ const searchByDate = async () => {
 };
 
 const clearFilters = () => {
+  selectedProvider.value = 'all';
+  selectedConsultationType.value = 'all';
   startDate.value = '';
   endDate.value = '';
+  searchStats.value = {
+    count: 0,
+    totalInDateRange: null
+  };
   loadAppointments();
 };
 
@@ -354,22 +457,47 @@ h1 {
   margin-bottom: 2rem;
 }
 
-.date-filters {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+.search-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  align-items: end;
 }
 
-.date-input {
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.filter-select,
+.filter-input {
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.date-input:focus {
+.filter-select:focus,
+.filter-input:focus {
   outline: none;
   border-color: #667eea;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+  grid-column: 1 / -1;
 }
 
 .filter-btn {
@@ -575,6 +703,57 @@ h1 {
 .success-message {
   background-color: #efe;
   color: #3c3;
+}
+
+/* Statistics Styles */
+.statistics-section {
+  margin: 1.5rem 0;
+}
+
+.stats-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.stat-note {
+  font-size: 0.85rem;
+  color: #777;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.25rem;
 }
 </style>
 

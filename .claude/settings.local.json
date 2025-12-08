@@ -21,7 +21,9 @@
       "Bash(powershell -Command:*)",
       "Bash(tasklist:*)",
       "Bash(lsof:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

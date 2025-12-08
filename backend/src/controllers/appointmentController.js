@@ -198,11 +198,62 @@ const appointmentController = {
             }
 
             const appointments = await Appointment.searchByDate(userId, start_date, end_date);
+            const totalInDateRange = await Appointment.getCountByDateRange(userId, start_date, end_date);
 
             res.json({
                 start_date,
                 end_date,
                 count: appointments.length,
+                total_in_date_range: totalInDateRange,
+                appointments
+            });
+        } catch (error) {
+            console.error('Search appointments error:', error);
+            res.status(500).json({ error: 'Failed to search appointments', details: error.message });
+        }
+    },
+
+    // Search appointments with multiple filters
+    searchAppointments: async (req, res) => {
+        try {
+            const userId = req.user.user_id;
+            const { provider_id, consultation_type, start_date, end_date } = req.query;
+
+            // Validate dates if provided
+            if (start_date && !validateDate(start_date)) {
+                return res.status(400).json({ error: 'Invalid start date format' });
+            }
+
+            if (end_date && !validateDate(end_date)) {
+                return res.status(400).json({ error: 'Invalid end date format' });
+            }
+
+            // Validate consultation type if provided
+            if (consultation_type && consultation_type !== 'all') {
+                if (!validateConsultationType(consultation_type)) {
+                    return res.status(400).json({ error: 'Invalid consultation type' });
+                }
+            }
+
+            const filters = {
+                provider_id,
+                consultation_type,
+                start_date,
+                end_date
+            };
+
+            const appointments = await Appointment.search(userId, filters);
+
+            // Get total appointments count for the date range (if dates are provided)
+            let totalInDateRange = null;
+            if (start_date || end_date) {
+                totalInDateRange = await Appointment.getCountByDateRange(userId, start_date, end_date);
+            }
+
+            res.json({
+                filters,
+                count: appointments.length,
+                total_in_date_range: totalInDateRange,
                 appointments
             });
         } catch (error) {

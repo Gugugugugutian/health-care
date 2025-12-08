@@ -24,7 +24,26 @@ export const appointmentService = {
     const response = await api.get('/appointments/search/date', {
       params: { start_date: startDate, end_date: endDate },
     });
-    return response.data.appointments || [];
+    return {
+      appointments: response.data.appointments || [],
+      count: response.data.count || 0,
+      totalInDateRange: response.data.total_in_date_range || null,
+      startDate: response.data.start_date,
+      endDate: response.data.end_date
+    };
+  },
+
+  // Search appointments with multiple filters
+  search: async (filters = {}) => {
+    const response = await api.get('/appointments/search', {
+      params: filters,
+    });
+    return {
+      appointments: response.data.appointments || [],
+      count: response.data.count || 0,
+      totalInDateRange: response.data.total_in_date_range || null,
+      filters: response.data.filters || {}
+    };
   },
 
   // Get appointment by ID

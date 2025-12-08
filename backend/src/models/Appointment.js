@@ -147,6 +147,45 @@ class Appointment {
         return rows;
     }
 
+    // Search appointments by provider, consultation type, and date range
+    static async search(userId, filters = {}) {
+        let query = `SELECT a.*, p.name as provider_name, p.license_number, p.specialty
+                     FROM appointments a
+                     JOIN providers p ON a.provider_id = p.provider_id
+                     WHERE a.user_id = ?`;
+
+        const params = [userId];
+
+        // Add provider filter
+        if (filters.provider_id && filters.provider_id !== 'all') {
+            query += ' AND a.provider_id = ?';
+            params.push(filters.provider_id);
+        }
+
+        // Add consultation type filter
+        if (filters.consultation_type && filters.consultation_type !== 'all') {
+            query += ' AND a.consultation_type = ?';
+            params.push(filters.consultation_type);
+        }
+
+        // Add date range filter
+        if (filters.start_date && filters.end_date) {
+            query += ' AND a.appointment_date BETWEEN ? AND ?';
+            params.push(filters.start_date, filters.end_date);
+        } else if (filters.start_date) {
+            query += ' AND a.appointment_date >= ?';
+            params.push(filters.start_date);
+        } else if (filters.end_date) {
+            query += ' AND a.appointment_date <= ?';
+            params.push(filters.end_date);
+        }
+
+        query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC';
+
+        const [rows] = await pool.execute(query, params);
+        return rows;
+    }
+
     // Get appointment statistics
     static async getStats(userId) {
         const [rows] = await pool.execute(
@@ -160,6 +199,29 @@ class Appointment {
             [userId]
         );
         return rows[0];
+    }
+
+    // Get appointment count by date range
+    static async getCountByDateRange(userId, startDate = null, endDate = null) {
+        let query = `SELECT COUNT(*) as total
+                     FROM appointments
+                     WHERE user_id = ?`;
+
+        const params = [userId];
+
+        if (startDate && endDate) {
+            query += ' AND appointment_date BETWEEN ? AND ?';
+            params.push(startDate, endDate);
+        } else if (startDate) {
+            query += ' AND appointment_date >= ?';
+            params.push(startDate);
+        } else if (endDate) {
+            query += ' AND appointment_date <= ?';
+            params.push(endDate);
+        }
+
+        const [rows] = await pool.execute(query, params);
+        return rows[0].total;
     }
 }
 
