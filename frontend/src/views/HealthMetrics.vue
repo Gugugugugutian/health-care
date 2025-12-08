@@ -14,14 +14,16 @@
           placeholder="搜索指标..."
           class="search-input"
         />
-        <select v-model="selectedYear" @change="loadMonthlySummary" class="year-select">
-          <option value="">选择年份</option>
-          <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-        </select>
-        <select v-model="selectedMonth" @change="loadMonthlySummary" class="month-select">
-          <option value="">选择月份</option>
-          <option v-for="month in months" :key="month.value" :value="month.value">{{ month.label }}</option>
-        </select>
+        <div class="date-filters">
+          <select v-model="selectedYear" @change="loadMonthlySummary" class="year-select">
+            <option value="">选择年份</option>
+            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+          </select>
+          <select v-model="selectedMonth" @change="loadMonthlySummary" class="month-select">
+            <option value="">选择月份</option>
+            <option v-for="month in months" :key="month.value" :value="month.value">{{ month.label }}</option>
+          </select>
+        </div>
         <button @click="clearFilters" class="filter-btn">清除</button>
       </div>
     </div>
@@ -354,17 +356,17 @@ h1 {
 
 .add-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .add-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .filters-section {
@@ -378,45 +380,80 @@ h1 {
   flex-wrap: wrap;
 }
 
-.search-input,
-.year-select,
-.month-select {
+.search-input {
+  flex: 1;
+  min-width: 200px;
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
 }
 
-.search-input {
-  flex: 1;
-  min-width: 200px;
+.date-filters {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .year-select,
 .month-select {
   min-width: 120px;
+  padding: 0.625rem 0.75rem;
+  padding-right: 2.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  color: #333;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.search-input:focus,
+.year-select:hover,
+.month-select:hover {
+  border-color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+}
+
 .year-select:focus,
 .month-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.year-select:active,
+.month-select:active {
+  border-color: #2c3e50;
 }
 
 .filter-btn {
   padding: 0.75rem 1.5rem;
-  background-color: #667eea;
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .filter-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .summary-section {
@@ -495,7 +532,7 @@ h1 {
 }
 
 .edit-btn {
-  background-color: #667eea;
+  background-color: #2c3e50;
   color: white;
 }
 
@@ -504,7 +541,10 @@ h1 {
   color: white;
 }
 
-.edit-btn:hover,
+.edit-btn:hover {
+  background-color: #34495e;
+}
+
 .delete-btn:hover {
   opacity: 0.9;
 }
@@ -554,7 +594,6 @@ h1 {
 }
 
 .form-group input,
-.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
@@ -563,11 +602,47 @@ h1 {
   font-size: 1rem;
 }
 
+.form-group select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  padding-right: 2.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  color: #333;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-group select:hover {
+  border-color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
 .form-group input:focus,
-.form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.form-group select:active {
+  border-color: #2c3e50;
 }
 
 .form-actions {
@@ -592,13 +667,16 @@ h1 {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
 }
 
-.cancel-btn:hover,
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
 .submit-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .error-message,

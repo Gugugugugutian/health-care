@@ -20,25 +20,25 @@
       >
         <div class="challenge-rank">
           <span class="rank-number">#{{ index + 1 }}</span>
-          <span v-if="index === 0" class="rank-badge">🏆 最热门</span>
         </div>
 
         <div class="challenge-content">
-          <h4>{{ challenge.title }}</h4>
+          <div class="challenge-title-row">
+            <h4>{{ challenge.title }}</h4>
+            <span v-if="challenge.avg_progress" class="avg-progress">
+              {{ Math.round(parseFloat(challenge.avg_progress)) }}%
+            </span>
+          </div>
           <p class="challenge-goal">{{ challenge.goal }}</p>
 
           <div class="challenge-meta">
             <div class="meta-item">
               <span class="meta-icon">👥</span>
-              <span class="meta-text">{{ challenge.participant_count }} 人参与</span>
+              <span class="meta-text">{{ challenge.participant_count }}人</span>
             </div>
             <div class="meta-item">
               <span class="meta-icon">📅</span>
               <span class="meta-text">{{ formatDate(challenge.start_date) }} - {{ formatDate(challenge.end_date) }}</span>
-            </div>
-            <div v-if="challenge.avg_progress" class="meta-item">
-              <span class="meta-icon">📊</span>
-              <span class="meta-text">平均进度: {{ Math.round(parseFloat(challenge.avg_progress)) }}%</span>
             </div>
           </div>
 
@@ -47,12 +47,7 @@
           </div>
         </div>
 
-        <div class="participant-count">
-          <div class="count-circle">
-            <span class="count-number">{{ challenge.participant_count }}</span>
-            <span class="count-label">参与者</span>
-          </div>
-        </div>
+      
       </div>
     </div>
   </div>
@@ -91,28 +86,29 @@ onMounted(() => {
 
 <style scoped>
 .most-popular-challenges {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 h3 {
   margin: 0;
   color: #333;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .subtitle {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
@@ -120,28 +116,30 @@ h3 {
 .empty-state {
   text-align: center;
   color: #999;
-  padding: 2rem;
+  padding: 1.5rem;
+  font-size: 0.9rem;
 }
 
 .challenges-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .challenge-card {
   display: flex;
   align-items: flex-start;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 
 .challenge-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f0f0f0;
 }
 
 .challenge-card.top-challenge {
@@ -151,80 +149,102 @@ h3 {
 
 .challenge-rank {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-right: 1rem;
-  min-width: 60px;
+  min-width: 35px;
 }
 
 .rank-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #667eea;
-  margin-bottom: 0.25rem;
-}
-
-.rank-badge {
-  font-size: 0.75rem;
-  color: #ff9800;
+  font-size: 1.2rem;
   font-weight: 600;
-  background: #fff3cd;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
+  color: #666;
 }
 
 .challenge-content {
   flex: 1;
 }
 
+.challenge-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  gap: 0.5rem;
+}
+
 .challenge-content h4 {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   color: #333;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.avg-progress {
+  color: #2c3e50;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .challenge-goal {
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.4rem 0;
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
 .challenge-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  flex-wrap: nowrap;
+  gap: 0.9rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.1rem;
+}
+
+.challenge-meta::-webkit-scrollbar {
+  height: 3px;
+}
+
+.challenge-meta::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .meta-icon {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .meta-text {
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .challenge-description {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1.4;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
   border-top: 1px solid #e0e0e0;
 }
 
 .participant-count {
   display: flex;
   align-items: center;
-  margin-left: 1rem;
+  margin-left: 0.75rem;
 }
 
 .count-circle {
@@ -232,21 +252,21 @@ h3 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 70px;
-  height: 70px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 60px;
+  height: 60px;
+  background-color: #2c3e50;
   border-radius: 50%;
   color: white;
 }
 
 .count-number {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .count-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   opacity: 0.9;
 }
 </style>

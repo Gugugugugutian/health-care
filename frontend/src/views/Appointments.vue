@@ -440,17 +440,17 @@ h1 {
 
 .add-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .add-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .filters-section {
@@ -476,7 +476,6 @@ h1 {
   font-size: 0.9rem;
 }
 
-.filter-select,
 .filter-input {
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
@@ -486,10 +485,42 @@ h1 {
   box-sizing: border-box;
 }
 
+.filter-select {
+  padding: 0.625rem 0.75rem;
+  padding-right: 2.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  color: #333;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filter-select:hover {
+  border-color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
 .filter-select:focus,
 .filter-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filter-select:active {
+  border-color: #2c3e50;
 }
 
 .filter-actions {
@@ -502,17 +533,17 @@ h1 {
 
 .filter-btn {
   padding: 0.75rem 1.5rem;
-  background-color: #667eea;
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .filter-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .loading,
@@ -641,7 +672,6 @@ h1 {
 }
 
 .form-group input,
-.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
@@ -650,11 +680,47 @@ h1 {
   font-size: 1rem;
 }
 
+.form-group select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  padding-right: 2.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  color: #333;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-group select:hover {
+  border-color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
 .form-group input:focus,
-.form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.form-group select:active {
+  border-color: #2c3e50;
 }
 
 .form-actions {
@@ -679,13 +745,16 @@ h1 {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
 }
 
-.cancel-btn:hover,
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
 .submit-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .error-message,
@@ -711,10 +780,11 @@ h1 {
 }
 
 .stats-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background-color: #ffffff;
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
 }
 
 .stats-card h3 {
@@ -744,7 +814,7 @@ h1 {
 .stat-value {
   font-size: 2rem;
   font-weight: 600;
-  color: #667eea;
+  color: #2c3e50;
 }
 
 .stat-note {

@@ -107,7 +107,7 @@ const handleRegister = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #f5f7fa;
   padding: 2rem;
 }
 
@@ -155,11 +155,12 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   border: none;
   padding: 0.75rem;
@@ -167,12 +168,12 @@ input:focus {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
   margin-top: 0.5rem;
 }
 
 .submit-btn:hover:not(:disabled) {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .submit-btn:disabled {
@@ -187,7 +188,7 @@ input:focus {
 }
 
 .login-link a {
-  color: #667eea;
+  color: #2c3e50;
   text-decoration: none;
   font-weight: 500;
 }

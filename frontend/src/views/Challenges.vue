@@ -323,17 +323,17 @@ h1 {
 
 .add-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .add-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .search-section {
@@ -351,7 +351,8 @@ h1 {
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
 }
 
 .loading,
@@ -405,7 +406,7 @@ h1 {
 }
 
 .challenge-goal {
-  color: #667eea;
+  color: #2c3e50;
   font-weight: 500;
   margin: 0.5rem 0;
   font-size: 0.95rem;
@@ -426,7 +427,7 @@ h1 {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   transition: width 0.3s;
 }
 
@@ -455,7 +456,7 @@ h1 {
 }
 
 .update-btn {
-  background-color: #667eea;
+  background-color: #2c3e50;
   color: white;
 }
 
@@ -474,7 +475,10 @@ h1 {
   color: #333;
 }
 
-.update-btn:hover,
+.update-btn:hover {
+  background-color: #34495e;
+}
+
 .join-btn:hover,
 .delete-btn:hover,
 .leave-btn:hover {
@@ -530,7 +534,8 @@ h1 {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
 }
 
 .form-actions {
@@ -555,13 +560,16 @@ h1 {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
 }
 
-.cancel-btn:hover,
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
 .submit-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .error-message,

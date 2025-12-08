@@ -313,17 +313,17 @@ h1 {
 
 .add-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .add-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .tabs {
@@ -346,12 +346,12 @@ h1 {
 }
 
 .tab:hover {
-  color: #667eea;
+  color: #2c3e50;
 }
 
 .tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: #2c3e50;
+  border-bottom-color: #2c3e50;
 }
 
 .loading,
@@ -486,8 +486,7 @@ h1 {
   color: #555;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
@@ -495,10 +494,46 @@ h1 {
   font-size: 1rem;
 }
 
-.form-group input:focus,
+.form-group select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  padding-right: 2.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  background: white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  color: #333;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-group select:hover {
+  border-color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+}
+
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.form-group select:active {
+  border-color: #2c3e50;
 }
 
 .form-actions {
@@ -523,13 +558,16 @@ h1 {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
 }
 
-.cancel-btn:hover,
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
 .submit-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .error-message,

@@ -20,7 +20,6 @@
       >
         <div class="user-rank">
           <span class="rank-number">#{{ index + 1 }}</span>
-          <span v-if="index === 0" class="rank-badge">🌟 最活跃</span>
         </div>
 
         <div class="user-avatar">
@@ -36,7 +35,7 @@
           <div class="user-stats">
             <div class="stat-item">
               <span class="stat-icon">📊</span>
-              <span class="stat-text">{{ user.health_metric_count }} 条健康记录</span>
+              <span class="stat-text">{{ user.health_metric_count }} 条记录</span>
             </div>
             <div class="stat-item">
               <span class="stat-icon">🏆</span>
@@ -103,28 +102,29 @@ onMounted(() => {
 
 <style scoped>
 .most-active-users {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 h3 {
   margin: 0;
   color: #333;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .subtitle {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
@@ -132,28 +132,30 @@ h3 {
 .empty-state {
   text-align: center;
   color: #999;
-  padding: 2rem;
+  padding: 1.5rem;
+  font-size: 0.9rem;
 }
 
 .users-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .user-card {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 
 .user-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f0f0f0;
 }
 
 .user-card.top-user {
@@ -163,42 +165,30 @@ h3 {
 
 .user-rank {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-right: 1rem;
-  min-width: 60px;
+  min-width: 35px;
 }
 
 .rank-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #667eea;
-  margin-bottom: 0.25rem;
-}
-
-.rank-badge {
-  font-size: 0.75rem;
-  color: #ff9800;
+  font-size: 1.2rem;
   font-weight: 600;
-  background: #fff3cd;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
+  color: #666;
 }
 
 .user-avatar {
-  margin-right: 1rem;
+  margin-right: 0.75rem;
 }
 
 .avatar-circle {
-  width: 50px;
-  height: 50px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
@@ -207,44 +197,48 @@ h3 {
 }
 
 .user-info h4 {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.2rem 0;
   color: #333;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .user-id {
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.4rem 0;
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-family: monospace;
 }
 
 .user-stats {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-wrap: nowrap;
+  gap: 0.9rem;
+  align-items: center;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
+  white-space: nowrap;
 }
 
 .stat-icon {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .stat-text {
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
 .activity-score {
   display: flex;
   align-items: center;
-  margin-left: 1rem;
+  margin-left: 0.75rem;
 }
 
 .score-circle {
@@ -252,30 +246,30 @@ h3 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
   border-radius: 50%;
   color: white;
 }
 
 .score-number {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .score-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   opacity: 0.9;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #eee;
 }
 

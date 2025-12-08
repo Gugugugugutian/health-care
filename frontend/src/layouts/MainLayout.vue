@@ -5,7 +5,7 @@
         <h2>HealthTrack</h2>
       </div>
       <div class="navbar-menu">
-        <router-link to="/" class="nav-link">仪表板</router-link>
+        <router-link to="/" class="nav-link" exact-active-class="router-link-exact-active">仪表板</router-link>
         <router-link to="/profile" class="nav-link">个人资料</router-link>
         <router-link to="/providers" class="nav-link">医疗提供者</router-link>
         <router-link to="/appointments" class="nav-link">预约</router-link>
@@ -42,13 +42,13 @@ const handleLogout = () => {
 }
 
 .navbar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand h2 {
@@ -76,7 +76,7 @@ const handleLogout = () => {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.nav-link.router-link-active {
+.nav-link.router-link-exact-active {
   background-color: rgba(255, 255, 255, 0.2);
 }
 

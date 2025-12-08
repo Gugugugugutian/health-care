@@ -242,17 +242,17 @@ h1 {
 
 .add-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s;
 }
 
 .add-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .loading,
@@ -365,13 +365,13 @@ h1 {
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: opacity 0.3s;
-  background-color: #764ba2;
+  transition: background-color 0.3s;
+  background-color: #2c3e50;
   color: white;
 }
 
 .invite-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .modal-overlay {
@@ -423,7 +423,8 @@ h1 {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
 }
 
 .form-hint {
@@ -455,13 +456,16 @@ h1 {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   color: white;
 }
 
-.cancel-btn:hover,
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
 .submit-btn:hover {
-  opacity: 0.9;
+  background-color: #34495e;
 }
 
 .error-message,

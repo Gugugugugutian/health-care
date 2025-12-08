@@ -171,107 +171,127 @@ onMounted(async () => {
 
 h1 {
   color: #333;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+  font-size: 1.75rem;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .stat-card {
   background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .stat-card h3 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
 .stat-number {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #667eea;
+  color: #2c3e50;
   margin: 0;
+  line-height: 1.2;
 }
 
 .stat-label {
   color: #999;
-  font-size: 0.85rem;
-  margin: 0.5rem 0 0 0;
+  font-size: 0.8rem;
+  margin: 0.25rem 0 0 0;
 }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .dashboard-section {
   background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .dashboard-section h2 {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
   color: #333;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .loading,
 .empty-state {
   text-align: center;
   color: #999;
-  padding: 2rem;
+  padding: 1.5rem;
+  font-size: 0.9rem;
 }
 
 .appointments-list,
 .challenges-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .appointment-item,
 .challenge-item {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background: #f8f9fa;
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color 0.2s;
+}
+
+.appointment-item:hover {
+  background-color: #f0f0f0;
 }
 
 .appointment-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
+  flex: 1;
 }
 
 .appointment-info strong {
   color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .appointment-info span {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-badge:not(.cancelled) {
@@ -287,45 +307,53 @@ h1 {
 .challenge-item {
   flex-direction: column;
   align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.challenge-item:hover {
+  background-color: #f0f0f0;
 }
 
 .challenge-item h4 {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .challenge-dates {
   color: #666;
-  font-size: 0.9rem;
-  margin: 0 0 0.75rem 0;
+  font-size: 0.8rem;
+  margin: 0;
 }
 
 .progress-bar {
   width: 100%;
-  height: 8px;
+  height: 6px;
   background-color: #e0e0e0;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 0.5rem;
+  margin: 0.25rem 0;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2c3e50;
   transition: width 0.3s;
 }
 
 .progress-text {
   margin: 0;
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .analytics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 .analytics-section {
@@ -333,6 +361,8 @@ h1 {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 </style>
 

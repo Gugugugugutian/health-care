@@ -21,8 +21,6 @@ SET @@SESSION.SQL_LOG_BIN= 0;
 -- GTID state at the beginning of the backup 
 --
 
-SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '62a73c68-d13a-11f0-8906-8084890022d2:1-130';
-
 --
 -- Table structure for table `appointments`
 --
